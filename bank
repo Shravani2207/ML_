@@ -78,6 +78,10 @@ sns.heatmap(cm,annot = True)
 plt.xlabel('Predicted')
 plt.ylabel('Truth')
 print(classification_report(y_test,y_pred))
+
+---------------------------------------------------------------------------------------------------------
+EXPLANATION
+
 Importing Libraries
 import pandas as pd
 import numpy as np
@@ -184,36 +188,39 @@ Loss: binary_crossentropy – used for binary output.
 Metric: accuracy – to evaluate model performance.
 classifier.summary()
 Shows structure of the model — number of layers, neurons, parameters, etc.
-________________________________________
+
 classifier.fit(X_train, y_train, batch_size=10, epochs=50)
 Trains the model for 50 epochs (full passes through data).
 batch_size=10 → weights are updated after every 10 samples.
-________________________________________
+
 y_pred = classifier.predict(X_test)
 y_pred = (y_pred > 0.5)
 Predicts probabilities for test data.
 Converts probabilities above 0.5 → True (1) → Exited, else False (0) → Not exited.
-________________________________________
+
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 cm = confusion_matrix(y_test, y_pred)
 accuracy = accuracy_score(y_test, y_pred)
 Confusion Matrix: Compares actual vs predicted labels.
 Accuracy: Overall percentage of correct predictions.
 Classification Report: Includes precision, recall, F1-score.
-________________________________________
+
 plt.figure(figsize=(10,7))
 sns.heatmap(cm, annot=True)
 plt.xlabel('Predicted')
 plt.ylabel('Truth')
 Creates a heatmap for the confusion matrix to easily visualize correct and incorrect predictions.
-________________________________________
+
 print(classification_report(y_test, y_pred))
 Prints a detailed performance report including:
 Precision (correct positive predictions)
 Recall (ability to find all positives)
 F1-score (balance between precision & recall)
 Support (number of true samples for each class)
-________________________________________
+-------------------------------------------------------------------------------------------------------------------
+
+QUESTIONS
+
 Step	Task	Purpose
 1	Import libraries	Tools for data & model
 2	Read dataset	Load customer data
@@ -228,7 +235,7 @@ Step	Task	Purpose
 11	Train	Learn from data
 12	Predict	Get output on test set
 13	Evaluate	Measure accuracy & visualize results
-________________________________________
+
 
 What is the objective of this project?
 To build a neural network-based classifier that predicts whether a bank customer will leave (churn) or stay with the bank in the next 6 months.
@@ -310,7 +317,7 @@ Loss: Measures how far the predictions are from actual values — used for model
 What is overfitting and how can it be prevented?
 Overfitting occurs when the model performs well on training data but poorly on test data.
 It can be prevented by using regularization, dropout layers, or early stopping.
-________________________________________
+
 What are the advantages of Neural Networks?
 Can model complex relationships
 Works well with large datasets
@@ -323,5 +330,4 @@ Can overfit easily without proper tuning
 What conclusion did you draw from this project?
 The ANN model effectively predicts customer churn. The most influential factors are Age, Balance, Active Membership, and Geography.
 The trained model achieved a good accuracy (around 85%), showing that neural networks can be efficiently used for churn prediction.
-________________________________________
 
