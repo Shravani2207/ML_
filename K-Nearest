@@ -131,9 +131,10 @@ p = sns.heatmap(pd.DataFrame(cnf_matrix), annot=True, cmap="YlGnBu" ,fmt='g')
 plt.title('Confusion matrix', y=1.1)
 plt.ylabel('Actual label')
 plt.xlabel('Predicted label')
-Line-by-line explanation (complete)
-Below I’ll walk through your script line-by-line, grouping a few closely related lines together where it makes the explanation clearer.
-________________________________________
+----------------------------------------------------------------------------------------------------------
+
+Line-by-line explanation 
+
 Imports, settings and installs
 from mlxtend.plotting import plot_decision_regions
 import numpy as np
@@ -153,8 +154,9 @@ import seaborn as sns: Seaborn — higher-level statistical plotting on top of M
 sns.set(): apply Seaborn’s default styling to all Matplotlib plots (improves visuals).
 import warnings / warnings.filterwarnings('ignore'): silences warning messages so notebook output is cleaner (useful during teaching/demos).
 %matplotlib inline: Jupyter magic to render Matplotlib plots inside the notebook cells.
-!pip install mlxtend: shell command to install the mlxtend package (required for plot_decision_regions). Run once per environment; in notebooks it’s common to include it so others can run the notebook.
-________________________________________
+!pip install mlxtend: shell command to install the mlxtend package (required for plot_decision_regions). 
+Run once per environment; in notebooks it’s common to include it so others can run the notebook.
+
 Load data and initial inspection
 #Loading the dataset
 diabetes_data = pd.read_csv('diabetes.csv')
@@ -169,17 +171,18 @@ diabetes_data.describe().T
 info(verbose=True): prints column names, non-null counts, dtypes, memory usage. Useful to detect missing values and types.
 describe(): summary stats for numeric columns (count, mean, std, min, quartiles, max).
 .T (transpose) prints the same table transposed — sometimes easier to read columns as rows.
-________________________________________
+
 Create a safe copy and replace zeros with NaN
 diabetes_data_copy = diabetes_data.copy(deep = True)
 diabetes_data_copy[['Glucose','BloodPressure','SkinThickness','Insulin','BMI']] = diabetes_data_copy[['Glucose','BloodPressure','SkinThickness','Insulin','BMI']].replace(0,np.nan)
 copy(deep=True): makes an independent copy (so original diabetes_data remains unchanged).
-The .replace(0, np.nan) on those columns: in this dataset, 0 is an invalid placeholder for physiological measures (e.g., BloodPressure=0 is not realistic). Replace 0 with np.nan so they are treated as missing values for imputation.
+The .replace(0, np.nan) on those columns: in this dataset, 0 is an invalid placeholder for physiological measures (e.g., BloodPressure=0 is not realistic).
+Replace 0 with np.nan so they are treated as missing values for imputation.
 print(diabetes_data_copy.isnull().sum())
 p = diabetes_data.hist(figsize = (20,20))
 isnull().sum(): prints count of missing values per column — helps identify which columns were affected.
 diabetes_data.hist(figsize=(20,20)): draws histograms for all numeric columns of the original dataframe (shows distributions).
-________________________________________
+
 Impute missing values
 diabetes_data_copy['Glucose'].fillna(diabetes_data_copy['Glucose'].mean(), inplace = True)
 diabetes_data_copy['BloodPressure'].fillna(diabetes_data_copy['BloodPressure'].mean(), inplace = True)
@@ -192,7 +195,7 @@ For SkinThickness, Insulin, and BMI you use the median — safer for skewed dist
 Choice of mean vs median is a design decision; justify in viva: median for skewed features, mean for near-symmetric.
 p = diabetes_data_copy.hist(figsize = (20,20))
 Shows histograms after imputation to visually confirm distributions haven’t become strange.
-________________________________________
+
 Quick shape and data type plot
 diabetes_data.shape
 sns.countplot(y=diabetes_data.dtypes ,data=diabetes_data)
@@ -202,7 +205,7 @@ plt.show()
 diabetes_data.shape: returns (rows, columns) — quickly shows dataset size (but here you didn’t print, so in a cell it would display).
 sns.countplot(y=diabetes_data.dtypes, data=diabetes_data): counts how many columns have each dtype (object, int64, float64). The y= puts dtypes on y-axis; this visualizes data types distribution.
 plt.xlabel/plt.ylabel() label axes. plt.show() forces plot rendering.
-________________________________________
+
 Missingness visualization (missingno)
 import missingno as msno
 p=msno.bar(diabetes_data)
@@ -210,7 +213,7 @@ p=msno.bar(diabetes_data)
 import missingno as msno: loads missingno, a library for visualizing missing data.
 msno.bar(diabetes_data): draws a bar chart of non-missing counts per column. Note: you should pass diabetes_data_copy if you want to see the NaNs you created by replacing zeros — diabetes_data is the original copy.
 !pip install missingno: installs missingno if not present.
-________________________________________
+
 Outcome balance and basic counts
 color_wheel = {1: "#0392cf",
 2: "#7bc043"}
@@ -221,21 +224,23 @@ color_wheel: a dictionary mapping integers to hex colors. (Odd: keys are 1 and 2
 colors = ...map(lambda x: color_wheel.get(x + 1)): maps each Outcome value to a color by adding 1; if Outcome is 0 or 1, x+1 becomes 1 or 2 — so it picks one of the two colors.
 diabetes_data.Outcome.value_counts(): prints counts of each class (e.g., how many 0s and 1s).
 .plot(kind="bar"): plots a bar chart of class counts — helpful to check class imbalance.
-________________________________________
+
 Scatter matrix, pairplot and correlation heatmaps
 from pandas.plotting import scatter_matrix
 p=scatter_matrix(diabetes_data,figsize=(25, 25))
 p=sns.pairplot(diabetes_data_copy, hue = 'Outcome')
-scatter_matrix(...): produces a matrix of scatter plots for each pair of numeric features and histograms on the diagonal — good for spotting relationships.
+scatter_matrix(...): produces a matrix of scatter plots for each pair of numeric features and histograms on the diagonal —
+good for spotting relationships.
 sns.pairplot(..., hue='Outcome'): Seaborn’s nicer version of pairwise scatterplots that colors points by Outcome.
 plt.figure(figsize=(12,10))
 p=sns.heatmap(diabetes_data.corr(), annot=True,cmap ='RdYlGn')
 plt.figure(figsize=(12,10))
 p=sns.heatmap(diabetes_data_copy.corr(), annot=True,cmap ='RdYlGn')
 diabetes_data.corr() / diabetes_data_copy.corr(): compute correlation matrices (original vs imputed).
-sns.heatmap(..., annot=True): heatmap with correlation coefficients annotated. RdYlGn colormap gives red–yellow–green gradient (negative to positive correlation).
+sns.heatmap(..., annot=True): heatmap with correlation coefficients annotated
+RdYlGn colormap gives red–yellow–green gradient (negative to positive correlation).
 Use this to identify features strongly correlated with Outcome.
-________________________________________
+
 Feature scaling (Standardization)
 from sklearn.preprocessing import StandardScaler
 sc_X = StandardScaler()
@@ -249,7 +254,7 @@ fit_transform(...) computes scaling on the provided columns and transforms them.
 pd.DataFrame(..., columns=[...]) wraps scaled array back into a DataFrame with column names.
 X.head() displays first rows of scaled features.
 y = ...Outcome: the target series (0 or 1).
-________________________________________
+
 Train-test split
 from sklearn.model_selection import train_test_split
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=1/3,random_state=42, stratify=y)
@@ -257,7 +262,7 @@ train_test_split(...) splits data:
 test_size=1/3 => 33% test, 67% train.
 random_state=42 ensures reproducibility.
 stratify=y preserves class proportion across train/test — important for imbalanced datasets.
-________________________________________
+
 KNN classifier: training for multiple k values
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -285,14 +290,14 @@ max_test_score = max(test_scores)
 test_scores_ind = [i for i, v in enumerate(test_scores) if v == max_test_score]
 print('Max test score {} % and k = {}'.format(max_test_score*100,list(map(lambda x: x+1, test_scores_ind))))
 Same for test scores: identifies best k based on test set accuracy and prints it. Use this to choose final model (prefer highest test accuracy).
-________________________________________
+
 Plot train vs test scores
 plt.figure(figsize=(12,5))
 p = sns.lineplot(x=range(1,15),y=train_scores,marker='*',label='Train Score')
 p = sns.lineplot(x=range(1,15),y=test_scores,marker='o',label='Test Score')
 Creates a line plot of training and test accuracies vs k (1–14).
 Use this plot to inspect underfitting/overfitting and select a robust k (e.g., where test score peaks and train/test are close).
-________________________________________
+
 Train final KNN and evaluate
 # Setup a knn classifier with k neighbors
 knn = KNeighborsClassifier(11)
@@ -302,7 +307,7 @@ knn.score(X_test,y_test)
 Instantiates final classifier with k=11 (presumably chosen from previous step).
 fit(...) stores training data.
 .score(X_test, y_test) prints final test accuracy for the selected model.
-________________________________________
+
 Decision region plot (2D projection trick)
 value = 20000
 width = 20000
@@ -320,13 +325,14 @@ filler_feature_values & filler_feature_ranges: used to control how non-plotted f
 these are arbitrary and usually you would set the constant values to meaningful numbers (e.g., feature means). 
 Using huge filler values can distort the visible decision regions — prefer using feature means or medians instead.
 X_highlight=X_test.values: highlights test samples on the plot.
-Note / Viva tip: This 2D visualization is only an approximation — it reduces dimensions to 2, so the visual decision boundary may not represent the full high-dimensional model behavior.
-________________________________________
+Note / Viva tip: This 2D visualization is only an approximation — 
+it reduces dimensions to 2, so the visual decision boundary may not represent the full high-dimensional model behavior.
+
 Add title and show plot
 plt.title('KNN with Diabetes Data')
 plt.show()
 Title for the decision region plot and show() to display it.
-________________________________________
+
 Confusion matrix and crosstab
 from sklearn.metrics import confusion_matrix
 y_pred = knn.predict(X_test)
@@ -344,7 +350,9 @@ plt.xlabel('Predicted label')
 Recomputes y_pred (same as earlier), gets cnf_matrix.
 sns.heatmap(pd.DataFrame(...), annot=True, fmt='g'): plots confusion matrix with counts annotated (integer formatting).
 Axis labels and title added for readability.
-________________________________________
+--------------------------------------------------------------------------------------------------------------------------
+
+
 QUESTIONS
 Q1. What dataset did you use?
 The Pima Indians Diabetes Dataset from Kaggle, which contains medical attributes (like Glucose, BMI, Age, etc.) and an Outcome column indicating whether the person has diabetes.
