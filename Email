@@ -44,7 +44,8 @@ metrics.confusion_matrix(y_true=y_test, y_pred=y_pred)
 print("SVM accuracy = ",metrics.accuracy_score(y_test,y_pred))
 
 short notes about intent and typical outputs where useful.
-
+------------------------------------------------------------------------------------
+EXPLANATION
 import pandas as pd
 Imports the pandas library and gives it the alias pd. Pandas is used for reading, manipulating, and analyzing tabular data (DataFrames).
 import numpy as np
@@ -64,7 +65,7 @@ from sklearn import metrics
 train_test_split: utility to split dataset into train and test subsets.
 SVC: Support Vector Classifier (SVM implementation) from scikit-learn.
 metrics: module containing functions to evaluate model performance (accuracy, confusion matrix, etc.).
-________________________________________
+
 df = pd.read_csv('emails.csv')
 Reads the CSV file emails.csv from the working directory into a pandas DataFrame called df. If the file isn't present you'll get a FileNotFoundError.
 df.head()
@@ -82,20 +83,20 @@ y = df['Prediction']
 X becomes the feature matrix: all columns except 'Prediction' (i.e., the inputs).
 y becomes the target vector: the 'Prediction' column (what you want to predict, e.g., spam vs not-spam).
 This is the standard features/labels separation for supervised learning.
-________________________________________
+
 from sklearn.preprocessing import scale
 X = scale(X)
 Imports the scale function (standardizes features).
 X = scale(X) standardizes each feature to have mean 0 and variance 1 (z-score scaling). This is important for distance-based models (KNN, SVM) so features are on the same scale.
 Note: scale returns a NumPy array (not a DataFrame).
-________________________________________
+
 # split into train and test
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 Splits the data into training and testing subsets:
 test_size=0.3 reserves 30% of data for testing and 70% for training.
 random_state=42 fixes the random seed so the split is reproducible.
 Result: four variables — training features/labels and testing features/labels.
-________________________________________
+
 from sklearn.neighbors import KNeighborsClassifier
 knn = KNeighborsClassifier(n_neighbors=7)
 Imports the K-Nearest Neighbors classifier.
@@ -110,7 +111,7 @@ print("KNN accuracy = ", metrics.accuracy_score(y_test, y_pred))
 Computes and prints the classification accuracy of the KNN model on test data: fraction of correct predictions (correct / total).
 print("Confusion matrix", metrics.confusion_matrix(y_test, y_pred))
 Computes and prints the confusion matrix for KNN: a 2×2 (for binary) or NxN (for multi-class) table showing true vs predicted class counts (TP, FP, TN, FN for binary).
-________________________________________
+
 # cost C = 1
 model = SVC(C = 1)
 Creates a Support Vector Classifier with regularization parameter C = 1. C controls the trade-off between a smooth decision boundary and classifying training points correctly; larger C → less regularization (tries harder to classify training points correctly).
@@ -124,7 +125,10 @@ metrics.confusion_matrix(y_true=y_test, y_pred=y_pred)
 Computes the confusion matrix for the SVM predictions. In your code you did not print it—this line returns the matrix but won’t display unless printed or in an interactive cell where return values are shown.
 print("SVM accuracy = ", metrics.accuracy_score(y_test, y_pred))
 Computes and prints the classification accuracy of the SVM on the test set.
-________________________________________
+--------------------------------------------------------------------------------------------------------------
+
+QUESTIONS
+
 Q1. What is the aim of this project?
 A: To predict whether an email is spam or not using machine learning algorithms like K-Nearest Neighbors (KNN) and Support Vector Machine (SVM).
 Q2. What dataset did you use?
@@ -212,7 +216,6 @@ Q34. Why do we use random_state?
 To get the same random split each time you run the code (reproducibility).
 Q35. What happens if you increase the number of neighbors in KNN?
  The model becomes smoother (less sensitive to noise) but may lose accuracy if too large.
-________________________________________
 Q1. What is the title of your assignment?
 A: “Classify the email using the binary classification method. Email spam detection using K-Nearest Neighbors and Support Vector Machine.”
 Q2. What are the two states in this classification problem?
@@ -308,5 +311,4 @@ Q34. What happens if data preprocessing is skipped?
  The model accuracy decreases due to noise, inconsistent formats, or unscaled features.
 Q35. Why is this assignment important?
  It demonstrates practical implementation of machine learning algorithms (KNN and SVM) in real-world text classification.
-________________________________________
 
