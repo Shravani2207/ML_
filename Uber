@@ -4,12 +4,18 @@ import numpy as np
 import pandas as pd
 
 uber = pd.read_csv('uber.csv')
+
 uber.head()
+
 uber.info()
+
 uber.isnull().sum()
+
 uber_2 = uber.drop(['Unnamed: 0','key'],axis=1)
 uber_2.dropna(axis=0,inplace=True)
+
 uber_2.isnull().sum()
+
 def haversine (lon_1, lon_2, lat_1, lat_2):
     lon_1, lon_2, lat_1, lat_2 = map(np.radians, [lon_1, lon_2, lat_1, lat_2])  #Degrees to Radians
     diff_lon = lon_2 - lon_1
@@ -28,16 +34,21 @@ uber_2.head()
 plt.scatter(uber_2['Distance'], uber_2['fare_amount'])
 plt.xlabel("Distance")
 plt.ylabel("fare_amount")
+
 uber_2.drop(uber_2[uber_2['Distance'] > 60].index, inplace = True)
 uber_2.drop(uber_2[uber_2['Distance'] == 0].index, inplace = True)
 uber_2.drop(uber_2[uber_2['fare_amount'] == 0].index, inplace = True)
 uber_2.drop(uber_2[uber_2['fare_amount'] < 0].index, inplace = True)
+
 uber_2.drop(uber_2[(uber_2['fare_amount']>100) & (uber_2['Distance']<1)].index, inplace = True )
 uber_2.drop(uber_2[(uber_2['fare_amount']<100) & (uber_2['Distance']>100)].index, inplace = True )
+
 uber_2.info()
+
 plt.scatter(uber_2['Distance'], uber_2['fare_amount'])
 plt.xlabel("Distance")
 plt.ylabel("fare_amount")
+
 uber_2['pickup_datetime'] = pd.to_datetime(uber_2['pickup_datetime'])
 
 uber_2['Year'] = uber_2['pickup_datetime'].apply(lambda time: time.year)
@@ -53,7 +64,9 @@ uber_2['Day of Week'] = uber_2['Day of Week'].map(day_map)
 uber_2['counter'] = 1
 uber_2['pickup'] = uber_2['pickup_latitude'].astype(str) + "," + uber_2['pickup_longitude'].astype(str)
 uber_2['drop off'] = uber_2['dropoff_latitude'].astype(str) + "," + uber_2['dropoff_longitude'].astype(str)
+
 uber_2.head()
+
 no_of_trips = []
 year = [2009, 2010, 2011, 2012, 2013, 2014, 2015]
 
@@ -82,20 +95,18 @@ print("Average trips a Month: ")
 print(month, no_of_trips)
 
 plt.bar(month, no_of_trips, color=colors)
+
 no_of_trips = []
 day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
           '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-
 for i in range(0, 7):
     x = uber_2.loc[uber_2['Day of Week_num'] == i, 'counter'].sum()
     no_of_trips.append(x)
-
 print("Average trips by Days: ")
 print(day, no_of_trips)
-
 plt.bar(day, no_of_trips, color=colors)
+
 year_vs_trips = uber_2.groupby(['Year','Month']).agg(
     no_of_trips = ('counter','count'),
     Average_fair = ('fare_amount','mean'),
@@ -108,12 +119,14 @@ year_vs_trips = year_vs_trips.reset_index()
 year_vs_trips.head()
 year_vs_trips.plot(kind='line',x='month_year',y='no_of_trips', xlabel='January, 2009 - June, 2015',
     ylabel='No of Trips', title='No of trips vs Months')
+
 import seaborn as sns
 
 df_1 = uber_2[['Distance', 'Day of Week_num', 'Hour']].copy()
 df_h = df_1.copy()
 df_h = df_h.groupby(['Hour', 'Day of Week_num']).mean()
 df_h = df_h.unstack(level=0)
+
 fig, ax = plt.subplots(figsize=(24, 7))
 sns.heatmap(df_h, cmap="Reds",
            linewidth=0.3, cbar_kws={"shrink": .8})
@@ -133,6 +146,7 @@ title = 'Weekly Uber Rides'.upper()
 plt.title(title, fontdict={'fontsize': 25})
 
 plt.show()
+
 import statistics as st
 
 print("Mean of fare prices is % s "
@@ -153,10 +167,13 @@ print("Median of Distance is % s "
 
 print("Standard Deviation of Distance is % s "
                 % (st.stdev(uber_2['Distance'])))
+
 corr = uber_2.corr(numeric_only=True)
 corr.style.background_gradient(cmap='BuGn')
+
 X = uber_2['Distance'].values.reshape(-1, 1)        #Independent Variable
 y = uber_2['fare_amount'].values.reshape(-1, 1)     #Dependent Variable
+
 from sklearn.preprocessing import StandardScaler
 std = StandardScaler()
 y_std = std.fit_transform(y)
@@ -164,27 +181,36 @@ print(y_std)
 
 x_std = std.fit_transform(X)
 print(x_std)
+
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(x_std, y_std, test_size=0.2, random_state=0)
+
 from sklearn.linear_model import LinearRegression
 l_reg = LinearRegression()
 l_reg.fit(X_train, y_train)
 print("Training set score: {:.2f}".format(l_reg.score(X_train, y_train)))
 print("Test set score: {:.7f}".format(l_reg.score(X_test, y_test)))
+
 y_pred = l_reg.predict(X_test)
 df = {'Actual': y_test, 'Predicted': y_pred}
 from tabulate import tabulate
 print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
+
 pip install tabulate
+
 from tabulate import tabulate
 print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
+
 from sklearn import metrics
+
 print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
 #print('Mean Absolute % Error:', metrics.mean_absolute_percentage_error(y_test, y_pred))
 print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
 print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+
 print(l_reg.intercept_)
 print(l_reg.coef_)
+
 plt.subplot(2, 2, 1)
 plt.scatter(X_train, y_train, color = 'red')
 plt.plot(X_train, l_reg.predict(X_train), color ="blue")
