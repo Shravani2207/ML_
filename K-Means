@@ -77,6 +77,7 @@ plt.scatter(reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA1'],reduced_X[reduce
 plt.scatter(reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA2'],color='springgreen')
 plt.scatter(reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA2'],color='indigo')
 plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300)
+------------------------------------------------------------------------------------------------------------------------
 
 Line-by-line explanation
 # Import libraries
@@ -141,7 +142,7 @@ df.drop('ORDERDATE', axis=1, inplace=True) #Dropping the Orderdate as Month is a
 df.dtypes #All the datatypes are converted into numeric
 Drops ORDERDATE because a derived Month column (or similar) already exists — avoiding redundant temporal info.
 Check dtypes to confirm all columns are numeric (required by KMeans).
-________________________________________
+
 Elbow method to choose number of clusters
 distortions = [] # Within Cluster Sum of Squares from the centroid
 K = range(1,10)
@@ -166,7 +167,7 @@ The elbow method: look for the k where reduction in inertia begins to taper off 
 ## As the number of k increases Inertia decreases.
 ## Observations: A Elbow can be observed at 3 and after that the curve decreases gradually.
 Comment: inertia always decreases as k increases; the meaningful question is where the elbow occurs.
-________________________________________
+
 Fit KMeans with chosen k
 X_train = df.values #Returns a numpy array.
 X_train.shape
@@ -186,7 +187,7 @@ np.unique(..., return_counts=True) returns unique labels and counts per cluster 
 counts.reshape(1,3) reshapes counts to a single row for convenient DataFrame creation (assumes 3 clusters).
 pd.DataFrame(...) creates a small DataFrame showing counts per cluster.
 counts_df.head() shows that row.
-________________________________________
+
 Visualize clusters using PCA (2D projection)
 pca = PCA(n_components=2) #Converting all the features into 2 columns to make it easy to visualize using Principal COmponent Analysis.
 reduced_X = pd.DataFrame(pca.fit_transform(X_train),columns=['PCA1','PCA2']) #Creating a DataFrame.
@@ -227,7 +228,9 @@ Repeats for Clusters == 1 and Clusters == 2.
 .loc[:, 'PCA1'] picks the PCA1 column values for the filtered rows.
 This coloring makes cluster separation visually clear.
 plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300)   # Plotting centroids
-________________________________________
+--------------------------------------------------------------------------------------------------------
+
+
 QUESTIONS
 What is clustering?
  Clustering is an unsupervised machine learning technique that groups similar data points into clusters based on distance or similarity.
@@ -302,7 +305,7 @@ What does PCA component value tell you?
  How much variance each principal component explains — the first component captures the most variance.
 What is inertia’s ideal value?
  Lower is better, but there’s no absolute value — it’s relative and compared across k values.
-________________________________________
+
 
 No.	Question	Answer
 1	What is clustering?
@@ -376,5 +379,5 @@ Too small → oversimplified; too large → overfitting and meaningless clusters
 48	What is the K-Means++ method?	It chooses better initial centroids to improve accuracy and stability.
 49	Why is scaling important in clustering?	Because features with larger values dominate distance calculations.
 50	What kind of learning is K-Means?	It is unsupervised learning.
-________________________________________
+
 
