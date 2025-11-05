@@ -264,7 +264,20 @@ def haversine (lon_1, lon_2, lat_1, lat_2):
 Computes differences in longitude and latitude (in radians) between the two points.
     km = 2 * 6371 * np.arcsin(np.sqrt(np.sin(diff_lat/2.0)**2 +
                                       np.cos(lat_1) * np.cos(lat_2) * np.sin(diff_lon/2.0)**2))
-	Applies the Haversine formula:
+	#np.sin(diff_lat/2.0)**2:
+→ Measures how much the latitude differs between the two points.
+np.sin(diff_lon/2.0)**2:
+→ Measures how much the longitude differs.
+np.cos(lat_1) * np.cos(lat_2):
+→ Adjusts for the curvature of the Earth — longitude differences matter less near the poles.
+#np.sqrt(...) → takes the square root of a.
+np.arcsin(...) → computes the angle (θ) between the two points at the Earth’s center, in radians.
+#The 2 * R part converts the central angle into the arc length (distance along the Earth’s surface).
+
+6371 is the average radius of Earth in km.
+
+So finally:distance (km)=2×R×arcsin(root of a)
+Applies the Haversine formula:
 	6371 is Earth’s radius in kilometers.
 	np.arcsin(np.sqrt(...)) computes the central angle between the two points.
 	The expression inside sqrt is the haversine of the central angle.
@@ -275,7 +288,8 @@ Computes differences in longitude and latitude (in radians) between the two poin
 Apply Haversine to dataset
 uber_2['Distance'] = haversine(uber_2['pickup_longitude'],uber_2['dropoff_longitude'],
                              uber_2['pickup_latitude'],uber_2['dropoff_latitude'])
-	Calls the haversine function using pickup/dropoff longitude and latitude columns. Creates a new column 'Distance' (in km) in uber_2.
+	Calls the haversine function using pickup/dropoff longitude and latitude columns.
+Creates a new column 'Distance' (in km) in uber_2.
 uber_2['Distance'] = uber_2['Distance'].astype(float).round(2)
 	Ensures the Distance column is float and rounds values to two decimal places for readability.
 uber_2.head()
@@ -288,10 +302,12 @@ plt.ylabel("fare_amount")
 	Plots a scatter of fare_amount vs Distance to visualize relationship and spot outliers. Labels the axes.
 The following lines drop rows judged to be outliers or invalid data:
 uber_2.drop(uber_2[uber_2['Distance'] > 60].index, inplace = True)
-	Drops trips with distance greater than 60 km — considered unrealistic for this dataset.
+#Finds all rows where distance > 60 km.,Removes them from the DataFrame.
+These are likely outliers or data entry errors
 uber_2.drop(uber_2[uber_2['Distance'] == 0].index, inplace = True)
-	Drops trips with distance 0, which are likely erroneous.
-uber_2.drop(uber_2[uber_2['fare_amount'] == 0].index, inplace = True)
+Removes rows where the distance is 0 km.
+These are invalid — a trip cannot have zero distancee
+.uber_2.drop(uber_2[uber_2['fare_amount'] == 0].index, inplace = True)
 	Drops rows where fare is 0 — usually invalid (except free rides).
 uber_2.drop(uber_2[uber_2['fare_amount'] < 0].index, inplace = True)
 	Drops negative fares, which are invalid.
@@ -308,21 +324,28 @@ plt.ylabel("fare_amount")
 
 Datetime feature engineering
 uber_2['pickup_datetime'] = pd.to_datetime(uber_2['pickup_datetime'])
-	Converts the pickup_datetime column from string to pandas datetime type for easy extraction of time components.
+Converts the 'pickup_datetime' column (which might be a string like "2016-01-01 08:45:00") into a datetime object using Pandas.
 uber_2['Year'] = uber_2['pickup_datetime'].apply(lambda time: time.year)
+#→ Creates a new column 'Year' showing the year of the trip.
 uber_2['Month'] = uber_2['pickup_datetime'].apply(lambda time: time.month)
+#→ Extracts the month number (1–12).
 uber_2['Day'] = uber_2['pickup_datetime'].apply(lambda time: time.day)
+#→ Extracts the day of the month (1–31).
 uber_2['Day of Week'] = uber_2['pickup_datetime'].apply(lambda time: time.dayofweek)
 uber_2['Day of Week_num'] = uber_2['pickup_datetime'].apply(lambda time: time.dayofweek)
+#time.dayofweek returns a number:
+Monday → 0
+Tuesday → 1
+Sunday → 6
 uber_2['Hour'] = uber_2['pickup_datetime'].apply(lambda time: time.hour)
-	Extracts year, month, day, day-of-week (0–6), duplicates day-of-week into Day of Week_num (numeric) and extracts hour. These are features useful for modeling and analysis.
+#→ Extracts the hour (0–23) when the trip was started.
 day_map = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
 uber_2['Day of Week'] = uber_2['Day of Week'].map(day_map)
 	Maps numeric day-of-week to readable strings, e.g., 0 → 'Mon'.
+#Converts the numeric day (0–6) to a readable day name.
 
-Additional columns and trip identifiers
 uber_2['counter'] = 1
-	Adds a counter column with value 1 for each row; useful for counting trips via aggregation.
+Adds a column filled with 1s.,This is useful for counting rides late
 uber_2['pickup'] = uber_2['pickup_latitude'].astype(str) + "," + uber_2['pickup_longitude'].astype(str)
 uber_2['drop off'] = uber_2['dropoff_latitude'].astype(str) + "," + uber_2['dropoff_longitude'].astype(str)
 	Creates string identifiers for pickup and dropoff coordinates (latitude,longitude) which can be used for grouping or mapping.
@@ -365,52 +388,82 @@ Computes trips per weekday and plots them.
 
 Monthly time-series aggregation
 year_vs_trips = uber_2.groupby(['Year','Month']).agg(
-    no_of_trips = ('counter','count'),
-    Average_fair = ('fare_amount','mean'),
-    Total_fair = ('fare_amount','sum'),
-    Avg_distance = ( 'Distance', 'mean')).reset_index()
+    no_of_trips = ('counter','count'),#Total rides in that month
+    Average_fair = ('fare_amount','mean'),#Average fare per ride
+    Total_fair = ('fare_amount','sum'),#Total money earned that month
+    Avg_distance = ( 'Distance', 'mean')).reset_index()#Average distance per ride
 	Groups data by Year and Month and computes aggregated metrics:
 	no_of_trips: count of rows in group
 	Average_fair: mean fare
 	Total_fair: sum of fares
 	Avg_distance: mean distance
 	reset_index() makes grouped fields regular columns again.
+
 year_vs_trips['avg_no_of_trips'] = year_vs_trips['no_of_trips']/30
+#Divides total monthly trips by 30 to approximate daily averages 
 	Computes approximate average daily trips per month by dividing monthly trips by 30.
 year_vs_trips['month_year'] = year_vs_trips['Month'].astype(str) +", "+ year_vs_trips['Year'].astype(str)
+#Converts numeric Month and Year into text like:
 year_vs_trips = year_vs_trips.reset_index()
+#Makes sure the DataFrame has a clean, sequential index.
 year_vs_trips.head()
+#Shows first 5 rows of your summarized dataset, e.g.:
 	Creates a readable month_year label like '1, 2009', resets index (not strictly necessary), and shows first rows.
 year_vs_trips.plot(kind='line', x='month_year', y='no_of_trips', xlabel='January, 2009 - June, 2015', ylabel='No of Trips', title='No of trips vs Months')
-	Plots a line chart of number of trips over months (using month_year labels).
-
+#Creates a line graph showing how the number of Uber trips changed month by month over the years.
+x-axis: Month & Year
+y-axis: Number of trips
+Title: “No of trips vs Months”
 Heatmap: average distance by hour and weekday
+
 import seaborn as sns
-	Imports seaborn (statistical plotting library) as sns for nicer plots.
+#Seaborn is a powerful visualization library built on top of Matplotlib — perfect for heatmaps and statistical plots.
 df_1 = uber_2[['Distance', 'Day of Week_num', 'Hour']].copy()
+#Creates a smaller DataFrame containing only the columns needed for analysis:
+Distance → distance of each trip
+Day of Week_num → numeric day (0 = Monday, 6 = Sunday)
+Hour → hour of day (0–23)
 df_h = df_1.copy()
+#Just duplicates the data for further transformation (clean and safe practice).
 df_h = df_h.groupby(['Hour', 'Day of Week_num']).mean()
 df_h = df_h.unstack(level=0)
 	Selects relevant columns (Distance, day-of-week numeric, Hour) into df_1.
 	Groups by Hour and Day-of-week and computes mean distances.
 	unstack(level=0) pivots the Hour index to columns so rows are day-of-week and columns are hours — shape suitable for a heatmap.
+
 fig, ax = plt.subplots(figsize=(24, 7))
 sns.heatmap(df_h, cmap="Reds", linewidth=0.3, cbar_kws={"shrink": .8})
-Creates a figure and axis with a large width, then plots a heatmap of average distances; cmap="Reds" uses red color shades.
+Creates a figure and axis with a large width, then plots a heatmap of average distances; 
+cmap="Reds" uses red color shades.
+cbar_kws={"shrink": .8} →slightly shrinks the color bar for a neat look.
 xticks_labels = ['12 AM', '01 AM', ... , '11 PM']
+#Defines a list of 24 labels for the hours
 yticks_labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+#Defines 7 labels for the days of the week.
 plt.xticks(np.arange(24) + .5, labels=xticks_labels)
 plt.yticks(np.arange(7) + .5, labels=yticks_labels)
+#np.arange(24) → creates values [0, 1, 2, …, 23]
++ .5 → centers labels between heatmap cells 
+Assigns the readable text labels defined above.
 ax.xaxis.tick_top()
+#Moves hour labels above the heatmap instead of below.
 title = 'Weekly Uber Rides'.upper()
 plt.title(title, fontdict={'fontsize': 25})
+#Adds a clear title above the heatmap in uppercase and larger font.
 plt.show()
 	Sets custom x and y tick labels for hours and weekdays, places x-axis ticks at top, sets a big title, and displays the plot.
 
 Descriptive statistics (fare and distance)
 import statistics as st
+#The Python built-in statistics module provides simple functions to compute:
+mean (average)
+median (middle value)
+stdev (standard deviation)
 print("Mean of fare prices is % s " % (st.mean(uber_2['fare_amount'])))
+#st.mean(uber_2['fare_amount']) → calculates the average fare (sum of all fares ÷ number of trips).
+% s is a placeholder that inserts the computed mean into the string.
 print("Median of fare prices is % s " % (st.median(uber_2['fare_amount'])))
+#st.median() → finds the middle value when all fares are sorted.
 print("Standard Deviation of Fare Prices is % s " % (st.stdev(uber_2['fare_amount'])))
 	Uses Python’s statistics module to compute and print mean, median and population sample standard deviation of fare_amount.
 print("Mean of Distance is % s " % (st.mean(uber_2['Distance'])))
@@ -431,7 +484,6 @@ y = uber_2['fare_amount'].values.reshape(-1, 1)     #Dependent Variable
 	Sets up:
 	X: the independent variable (Distance) as a 2D NumPy array (reshape(-1,1) makes it n×1).
 	y: the dependent variable (fare_amount) also as n×1 array.
-	Comment clarifies roles of X and y.
 
 Standardization (scaling)
 from sklearn.preprocessing import StandardScaler
@@ -456,9 +508,16 @@ X_train, X_test, y_train, y_test = train_test_split(x_std, y_std, test_size=0.2,
 Linear regression model training
 from sklearn.linear_model import LinearRegression
 l_reg = LinearRegression()
+#Initializes a linear regression model with default parameters.
 l_reg.fit(X_train, y_train)
-	Imports linear regression algorithm, creates an instance l_reg, and fits it to training data (X_train, y_train) learning parameters (slope and intercept).
+#Fits the model to the training data:
+X_train → independent variables (features)
+y_train → dependent variable (target, e.g., fare_amount)
 print("Training set score: {:.2f}".format(l_reg.score(X_train, y_train)))
+#.score() → returns the R² (R-squared) value — a measure of how well the model fits the data.
+R² = 1 → perfect fit
+R² = 0 → model explains none of the variance
+R² < 0 → model performs worse than a horizontal line (poor fit)
 print("Test set score: {:.7f}".format(l_reg.score(X_test, y_test)))
 	Prints the coefficient of determination R^2 for training and test sets.
 	l_reg.score() returns R² (variance explained by model).
@@ -482,9 +541,12 @@ print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
 
 Model evaluation metrics
 from sklearn import metrics
+#Gives you access to various evaluation functions for regression and classification models.
 print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
+#Easy to interpret — it tells you average absolute error in same units as the target 
 #print('Mean Absolute % Error:', metrics.mean_absolute_percentage_error(y_test, y_pred))
 print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
+#Tells you the average percentage error of predictions.
 print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
 	Imports evaluation metrics from scikit-learn.
 	mean_absolute_error (MAE): average absolute difference between actual and predicted.
@@ -493,7 +555,8 @@ print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_p
 	The MAPE line is commented out; it would compute percentage error if used.
 print(l_reg.intercept_)
 print(l_reg.coef_)
-	Prints the learned intercept (bias) and coefficient(s) (slope(s)) of the linear model. Since data was standardized, these are in scaled units.
+	Prints the learned intercept (bias) and coefficient(s) (slope(s)) of the linear model. 
+Since data was standardized, these are in scaled units.
 
 Visualization of fit
 plt.subplot(2, 2, 1)
