@@ -201,6 +201,8 @@ plt.tight_layout()
 plt.rcParams["figure.figsize"] = (32,22)
 plt.show()
 
+------------------------------------------------------------------------------------------------------------------
+EXPLANATION
 
 Imports & reading data
 import matplotlib.pyplot as plt
@@ -217,7 +219,7 @@ uber.info()
 	Prints concise summary: column names, non-null counts and data types. Useful to spot missing values and types that need conversion.
 uber.isnull().sum()
 	For each column, counts how many missing (NaN) values exist. Helpful to understand data completeness.
-________________________________________
+
 Basic cleaning
 uber_2 = uber.drop(['Unnamed: 0','key'], axis=1)
 	Creates a new DataFrame uber_2 by dropping the columns 'Unnamed: 0' and 'key'. These are likely unneeded metadata columns. axis=1 indicates column drop.
@@ -225,7 +227,7 @@ uber_2.dropna(axis=0, inplace=True)
 	Removes all rows that contain any missing values. axis=0 means drop rows; inplace=True modifies uber_2 directly.
 uber_2.isnull().sum()
 	Rechecks missing value counts to confirm dropna removed them.
-________________________________________
+
 Haversine distance function
 def haversine (lon_1, lon_2, lat_1, lat_2):
 	Defines a function named haversine that will calculate great-circle distance between two lat/long points. Parameters are four arrays/columns: pickup lon/lat and dropoff lon/lat (order in your call is lon1, lon2, lat1, lat2).
@@ -243,7 +245,7 @@ Computes differences in longitude and latitude (in radians) between the two poin
 	Result km is the distance in kilometers.
     return km
 	Returns the calculated distances (can be scalar or array).
-________________________________________
+
 Apply Haversine to dataset
 uber_2['Distance'] = haversine(uber_2['pickup_longitude'],uber_2['dropoff_longitude'],
                              uber_2['pickup_latitude'],uber_2['dropoff_latitude'])
@@ -252,7 +254,7 @@ uber_2['Distance'] = uber_2['Distance'].astype(float).round(2)
 	Ensures the Distance column is float and rounds values to two decimal places for readability.
 uber_2.head()
 Shows the first rows of uber_2 including the new Distance column.
-________________________________________
+
 Scatter plot and outlier removal
 plt.scatter(uber_2['Distance'], uber_2['fare_amount'])
 plt.xlabel("Distance")
@@ -277,7 +279,7 @@ plt.scatter(uber_2['Distance'], uber_2['fare_amount'])
 plt.xlabel("Distance")
 plt.ylabel("fare_amount")
 •	Replot scatter after outlier removal to visualize cleaned relationship.
-________________________________________
+
 Datetime feature engineering
 uber_2['pickup_datetime'] = pd.to_datetime(uber_2['pickup_datetime'])
 	Converts the pickup_datetime column from string to pandas datetime type for easy extraction of time components.
@@ -291,7 +293,7 @@ uber_2['Hour'] = uber_2['pickup_datetime'].apply(lambda time: time.hour)
 day_map = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
 uber_2['Day of Week'] = uber_2['Day of Week'].map(day_map)
 	Maps numeric day-of-week to readable strings, e.g., 0 → 'Mon'.
-________________________________________
+
 Additional columns and trip identifiers
 uber_2['counter'] = 1
 	Adds a counter column with value 1 for each row; useful for counting trips via aggregation.
@@ -300,7 +302,7 @@ uber_2['drop off'] = uber_2['dropoff_latitude'].astype(str) + "," + uber_2['drop
 	Creates string identifiers for pickup and dropoff coordinates (latitude,longitude) which can be used for grouping or mapping.
 uber_2.head()
 	Shows first rows including new columns.
-________________________________________
+
 Aggregation: trips per year / month / day
 This block computes number of trips per year and plots them:
 no_of_trips = []
@@ -334,7 +336,7 @@ print("Average trips by Days: ")
 print(day, no_of_trips)
 plt.bar(day, no_of_trips, color=colors)
 Computes trips per weekday and plots them.
-________________________________________
+
 Monthly time-series aggregation
 year_vs_trips = uber_2.groupby(['Year','Month']).agg(
     no_of_trips = ('counter','count'),
@@ -355,7 +357,7 @@ year_vs_trips.head()
 	Creates a readable month_year label like '1, 2009', resets index (not strictly necessary), and shows first rows.
 year_vs_trips.plot(kind='line', x='month_year', y='no_of_trips', xlabel='January, 2009 - June, 2015', ylabel='No of Trips', title='No of trips vs Months')
 	Plots a line chart of number of trips over months (using month_year labels).
-________________________________________
+
 Heatmap: average distance by hour and weekday
 import seaborn as sns
 	Imports seaborn (statistical plotting library) as sns for nicer plots.
@@ -378,7 +380,7 @@ title = 'Weekly Uber Rides'.upper()
 plt.title(title, fontdict={'fontsize': 25})
 plt.show()
 	Sets custom x and y tick labels for hours and weekdays, places x-axis ticks at top, sets a big title, and displays the plot.
-________________________________________
+
 Descriptive statistics (fare and distance)
 import statistics as st
 print("Mean of fare prices is % s " % (st.mean(uber_2['fare_amount'])))
@@ -389,14 +391,14 @@ print("Mean of Distance is % s " % (st.mean(uber_2['Distance'])))
 print("Median of Distance is % s " % (st.median(uber_2['Distance'])))
 print("Standard Deviation of Distance is % s " % (st.stdev(uber_2['Distance'])))
 	Same stats computed for Distance.
-________________________________________
+
 Correlation matrix
 corr = uber_2.corr(numeric_only=True)
 corr.style.background_gradient(cmap='BuGn')
 	Computes correlation coefficients between numeric columns using Pearson correlation.
 	numeric_only=True ensures only numeric columns are used.
 	corr.style.background_gradient(...) displays a styled HTML table with a color gradient for visualization (works in Jupyter/Notebook).
-________________________________________
+
 Prepare data for modeling (features & target)
 X = uber_2['Distance'].values.reshape(-1, 1)        #Independent Variable
 y = uber_2['fare_amount'].values.reshape(-1, 1)     #Dependent Variable
@@ -404,7 +406,7 @@ y = uber_2['fare_amount'].values.reshape(-1, 1)     #Dependent Variable
 	X: the independent variable (Distance) as a 2D NumPy array (reshape(-1,1) makes it n×1).
 	y: the dependent variable (fare_amount) also as n×1 array.
 	Comment clarifies roles of X and y.
-________________________________________
+
 Standardization (scaling)
 from sklearn.preprocessing import StandardScaler
 std = StandardScaler()
@@ -417,14 +419,14 @@ print(x_std)
 	Note: using the same scaler instance for both y and X is not standard practice (scaler fit should be separate for X and y or use separate instances); 
 but here both are scaled for numerical stability and to compare on the same scale.
 	print(...) statements display the transformed arrays (for debugging/inspection).
-________________________________________
+
 Train-test split
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(x_std, y_std, test_size=0.2, random_state=0)
 	Imports function to split arrays into random train and test subsets.
 	Splits the scaled data into training (80%) and testing (20%).
 	random_state=0 sets a seed for reproducibility.
-________________________________________
+
 Linear regression model training
 from sklearn.linear_model import LinearRegression
 l_reg = LinearRegression()
@@ -439,7 +441,7 @@ y_pred = l_reg.predict(X_test)
 Uses the trained model to predict target values for X_test. Results are stored in y_pred.
 df = {'Actual': y_test, 'Predicted': y_pred}
 	Creates a simple dictionary df mapping actual and predicted scaled values for comparison. (Note: df is not a DataFrame here, it’s just a dictionary.)
-________________________________________
+
 (Attempt to) pretty-print predictions
 from tabulate import tabulate
 print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
@@ -451,7 +453,7 @@ pip install tabulate
 from tabulate import tabulate
 print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
 	Re-attempt to import and print after installing the package. In a proper notebook, this will show a formatted table.
-________________________________________
+
 Model evaluation metrics
 from sklearn import metrics
 print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
@@ -466,7 +468,7 @@ print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_p
 print(l_reg.intercept_)
 print(l_reg.coef_)
 	Prints the learned intercept (bias) and coefficient(s) (slope(s)) of the linear model. Since data was standardized, these are in scaled units.
-________________________________________
+
 Visualization of fit
 plt.subplot(2, 2, 1)
 plt.scatter(X_train, y_train, color = 'red')
@@ -490,22 +492,25 @@ plt.tight_layout()
 plt.rcParams["figure.figsize"] = (32,22)
 plt.show()
 	plt.tight_layout() adjusts subplot spacing to prevent overlap.
-	plt.rcParams["figure.figsize"] sets default figure size; setting it here after plotting may not affect already created figures — it is better to set before creating plots.
+	plt.rcParams["figure.figsize"] sets default figure size; setting it here after plotting may not affect already created figures — 
+it is better to set before creating plots.
 	plt.show() renders the figures.
-________________________________________
+
 	Haversine: correct formula to compute great-circle distances — necessary because latitude/longitude are on spherical Earth.
-	Outlier removal: chosen thresholds are heuristic; justify them in exam as domain-informed (distances > 60 km or fares = 0 are implausible for city rides).
+	Outlier removal: chosen thresholds are heuristic; 
+justify them in exam as domain-informed (distances > 60 km or fares = 0 are implausible for city rides).
 	Feature engineering: extracting Year/Month/Hour/Day improves model power because fares may vary by time.
 	Scaling: StandardScaler scales features to zero mean and unit variance; helps models converge and compare coefficients.
 In production, scale X and y with separate scalers or inverse transform predictions to original units before reporting final metrics.
 	Train/test split: random_state=0 ensures reproducibility.
-	Evaluation: R², MAE, MSE, RMSE each provide different perspectives: R² for explained variance, MAE for average error magnitude, RMSE emphasizes larger errors.
+	Evaluation: R², MAE, MSE, RMSE each provide different perspectives: R² for explained variance,
+MAE for average error magnitude, RMSE emphasizes larger errors.
 	Code issues to mention (if asked in exam):
 	Using the same StandardScaler() instance for X and y is not ideal — usually use separate scalers.
 	pip install inside script should be run outside or with !pip in notebook.
 	df used with tabulate is a dictionary; better to convert to pd.DataFrame(df) before tabulating for row-wise display.
 	Labels in plots show scaled units; to show real-world units you should inverse-transform scaled values back to original scale before plotting.
-________________________________________
+--------------------------------------------------------------------------------------------------------------------------------------------------
 QUESTIONS
 Q1. What is the objective of your project?
  To predict the fare amount of Uber rides using machine learning models such as Linear Regression and Random Forest Regression.
@@ -514,7 +519,8 @@ Q2. What dataset did you use?
 Q3. What tools/libraries did you use?
  Python, Pandas, NumPy, Matplotlib, Seaborn, Scikit-learn, and Statistics library.
 Q4. What is data preprocessing?
- It’s the process of cleaning and preparing raw data to make it suitable for a machine learning model — by removing null values, handling outliers, encoding, and scaling features.
+ It’s the process of cleaning and preparing raw data to make it suitable for a machine learning model
+— by removing null values, handling outliers, encoding, and scaling features.
 Q5. Why is data preprocessing important?
  Because raw data often contains missing values, noise, and inconsistencies that can affect the accuracy of the model.
 Q6. What steps did you follow in data preprocessing?
@@ -611,7 +617,7 @@ A statistical measure that shows how two variables are related (ranges from -1 t
 	What is the difference between Series and DataFrame?
  Series = single column; DataFrame = multiple columns.
 
-________________________________________
+
 Q1. What is the use of pandas library?
  Pandas is used for data manipulation and analysis — loading, cleaning, and transforming datasets easily using DataFrames.
 Q2. What does numpy do?
@@ -709,6 +715,7 @@ Q45. What insight did you find?
  By using multiple features (like time, location) and advanced models like Random Forest or XGBoost.
 	What is overfitting?
  When a model performs well on training data but poorly on test data.
-________________________________________
+
+
 
 
