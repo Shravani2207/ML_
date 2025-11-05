@@ -1,0 +1,380 @@
+ASSIGNMENT NO 5
+# Implement K-Means clustering/ hierarchical clustering on sales_data_sample.csv dataset. Determine the number of clusters using the elbow method.
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+#Importing the required libraries.
+from sklearn.cluster import KMeans, k_means #For clustering
+from sklearn.decomposition import PCA #Linear Dimensionality reduction.
+df = pd.read_csv("sales_data_sample.csv", sep=",", encoding='Latin-1') #Loading the dataset.
+## Preprocessing
+df.head()
+df.shape
+df.describe()
+df.info()
+df.isnull().sum()
+df.dtypes
+df_drop  = ['ADDRESSLINE1', 'ADDRESSLINE2', 'STATUS','POSTALCODE', 'CITY', 'TERRITORY', 'PHONE', 'STATE', 'CONTACTFIRSTNAME', 'CONTACTLASTNAME', 'CUSTOMERNAME', 'ORDERNUMBER']
+df = df.drop(df_drop, axis=1) #Dropping the categorical uneccessary columns along with columns having null values. Can't fill the null values are there are alot of null values.
+df.isnull().sum()
+df.dtypes
+# Checking the categorical columns.
+df['COUNTRY'].unique()
+df['PRODUCTLINE'].unique()
+df['DEALSIZE'].unique()
+productline = pd.get_dummies(df['PRODUCTLINE']) #Converting the categorical columns.
+Dealsize = pd.get_dummies(df['DEALSIZE'])
+df = pd.concat([df,productline,Dealsize], axis = 1)
+df_drop  = ['COUNTRY','PRODUCTLINE','DEALSIZE'] #Dropping Country too as there are alot of countries.
+df = df.drop(df_drop, axis=1)
+df['PRODUCTCODE'] = pd.Categorical(df['PRODUCTCODE']).codes #Converting the datatype.
+df.drop('ORDERDATE', axis=1, inplace=True) #Dropping the Orderdate as Month is already included.
+df.dtypes #All the datatypes are converted into numeric
+## Plotting the Elbow Plot to determine the number of clusters.
+distortions = [] # Within Cluster Sum of Squares from the centroid
+K = range(1,10)
+for k in K:
+kmeanModel = KMeans(n_clusters=k)
+kmeanModel.fit(df)
+distortions.append(kmeanModel.inertia_)   #Appeding the intertia to the Distortions
+plt.figure(figsize=(16,8))
+plt.plot(K, distortions, 'bx-')
+plt.xlabel('k')
+plt.ylabel('Distortion')
+plt.title('The Elbow Method showing the optimal k')
+plt.show()
+## As the number of k increases Inertia decreases.
+## Observations: A Elbow can be observed at 3 and after that the curve decreases gradually.
+X_train = df.values #Returns a numpy array.
+X_train.shape
+model = KMeans(n_clusters=3,random_state=2) #Number of cluster = 3
+model = model.fit(X_train) #Fitting the values to create a model.
+predictions = model.predict(X_train) #Predicting the cluster values (0,1,or 2)
+unique,counts = np.unique(predictions,return_counts=True)
+counts = counts.reshape(1,3)
+counts_df = pd.DataFrame(counts,columns=['Cluster1','Cluster2','Cluster3'])
+counts_df.head()
+## Visualization
+pca = PCA(n_components=2) #Converting all the features into 2 columns to make it easy to visualize using Principal COmponent Analysis.
+reduced_X = pd.DataFrame(pca.fit_transform(X_train),columns=['PCA1','PCA2']) #Creating a DataFrame.
+reduced_X.head()
+#Plotting the normal Scatter Plot
+plt.figure(figsize=(14,10))
+plt.scatter(reduced_X['PCA1'],reduced_X['PCA2'])
+model.cluster_centers_ #Finding the centriods. (3 Centriods in total. Each Array contains a centroids for particular feature )
+reduced_centers = pca.transform(model.cluster_centers_) #Transforming the centroids into 3 in x and y coordinates
+reduced_centers
+plt.figure(figsize=(14,10))
+plt.scatter(reduced_X['PCA1'],reduced_X['PCA2'])
+plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300) #Plotting the centriods
+reduced_X['Clusters'] = predictions #Adding the Clusters to the reduced dataframe.
+reduced_X.head()
+#Plotting the clusters
+plt.figure(figsize=(14,10))
+#                     taking the cluster number and first column           taking the same cluster number and second column      Assigning the color
+plt.scatter(reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA2'],color='slateblue')
+plt.scatter(reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA2'],color='springgreen')
+plt.scatter(reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA2'],color='indigo')
+plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300)
+
+Line-by-line explanation
+# Import libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+Imports commonly used libraries:
+pandas → dataframes and I/O.
+numpy → numeric operations and arrays.
+seaborn → high-level plotting.
+matplotlib.pyplot → base plotting functions.
+#Importing the required libraries.
+from sklearn.cluster import KMeans, k_means #For clustering
+from sklearn.decomposition import PCA #Linear Dimensionality reduction.
+KMeans is the K-means clustering estimator from scikit-learn.
+k_means is an older functional API — you typically only need KMeans. (Minor note: importing k_means is unnecessary and may be deprecated.)
+PCA will be used later to reduce feature space to 2D for visualization.
+df = pd.read_csv("sales_data_sample.csv", sep=",", encoding='Latin-1') #Loading the dataset.
+Reads the CSV file sales_data_sample.csv into a DataFrame df.
+sep="," is CSV default; encoding='Latin-1' handles files with special characters not covered by UTF-8.
+## Preprocessing
+df.head()
+df.shape
+df.describe()
+df.info()
+df.isnull().sum()
+df.dtypes
+df.head() shows first 5 rows (quick glance at raw data).
+df.shape returns (rows, columns).
+df.describe() shows numeric summary statistics (mean, std, min, quartiles, max).
+df.info() prints column names, non-null counts, and dtypes — handy to spot missing values and data types.
+df.isnull().sum() counts missing values per column.
+df.dtypes shows each column’s data type.
+df_drop  = ['ADDRESSLINE1', 'ADDRESSLINE2', 'STATUS','POSTALCODE', 'CITY', 'TERRITORY', 'PHONE', 'STATE', 'CONTACTFIRSTNAME', 'CONTACTLASTNAME', 'CUSTOMERNAME', 'ORDERNUMBER']
+df = df.drop(df_drop, axis=1) #Dropping the categorical uneccessary columns along with columns having null values. Can't fill the null values are there are alot of null values.
+df.isnull().sum()
+df.dtypes
+Creates a list df_drop of columns considered unnecessary for clustering (mostly identifiers, text addresses, phone numbers).
+df.drop(..., axis=1) removes those columns from the DataFrame.
+The comment explains the reasoning: too many nulls / categorical text that are not helpful for numeric clustering.
+After dropping, df.isnull().sum() and df.dtypes are checked again to see the remaining nulls and data types.
+# Checking the categorical columns.
+df['COUNTRY'].unique()
+df['PRODUCTLINE'].unique()
+df['DEALSIZE'].unique()
+Prints unique values for these columns to inspect categories and decide what to do (one-hot encode, drop, etc.).
+productline = pd.get_dummies(df['PRODUCTLINE']) #Converting the categorical columns.
+Dealsize = pd.get_dummies(df['DEALSIZE'])
+df = pd.concat([df,productline,Dealsize], axis = 1)
+pd.get_dummies(...) converts categorical columns into one-hot encoded indicator columns (binary columns per category).
+productline and Dealsize are DataFrames with those dummy columns.
+pd.concat([...], axis=1) appends the new dummy columns to df.
+df_drop  = ['COUNTRY','PRODUCTLINE','DEALSIZE'] #Dropping Country too as there are alot of countries.
+df = df.drop(df_drop, axis=1)
+Drops the original categorical columns now that their dummy columns exist.
+Also drops COUNTRY entirely, as noted — probably too many unique countries would produce many dummy columns or noise.
+df['PRODUCTCODE'] = pd.Categorical(df['PRODUCTCODE']).codes #Converting the datatype.
+Converts the PRODUCTCODE categorical column into integer category codes (0,1,2,...).
+This is a label encoding approach; it produces numeric values but does not preserve any real ordinal meaning. Acceptable for clustering only if codes are meaningful or when followed by scaling.
+df.drop('ORDERDATE', axis=1, inplace=True) #Dropping the Orderdate as Month is already included.
+df.dtypes #All the datatypes are converted into numeric
+Drops ORDERDATE because a derived Month column (or similar) already exists — avoiding redundant temporal info.
+Check dtypes to confirm all columns are numeric (required by KMeans).
+________________________________________
+Elbow method to choose number of clusters
+distortions = [] # Within Cluster Sum of Squares from the centroid
+K = range(1,10)
+for k in K:
+kmeanModel = KMeans(n_clusters=k)
+kmeanModel.fit(df)
+distortions.append(kmeanModel.inertia_)   #Appeding the intertia to the Distortions
+distortions will store inertia_ values (sum of squared distances of samples to closest cluster center), a measure of cluster compactness.
+K = range(1,10) sets the candidate k values (1..9).
+Loop:
+Instantiate KMeans(n_clusters=k) (default random_state not set — results will vary slightly each run).
+.fit(df) fits KMeans on the whole DataFrame (all numeric features).
+kmeanModel.inertia_ gives the within-cluster sum of squares for that k; appended to distortions.
+plt.figure(figsize=(16,8))
+plt.plot(K, distortions, 'bx-')
+plt.xlabel('k')
+plt.ylabel('Distortion')
+plt.title('The Elbow Method showing the optimal k')
+plt.show()
+Plots distortions vs k.
+The elbow method: look for the k where reduction in inertia begins to taper off (the “elbow”). That point is a reasonable tradeoff between compactness and number of clusters.
+## As the number of k increases Inertia decreases.
+## Observations: A Elbow can be observed at 3 and after that the curve decreases gradually.
+Comment: inertia always decreases as k increases; the meaningful question is where the elbow occurs.
+________________________________________
+Fit KMeans with chosen k
+X_train = df.values #Returns a numpy array.
+X_train.shape
+X_train is a NumPy array of the DataFrame values (shape: n_samples × n_features).
+X_train.shape would print the array shape in a cell.
+model = KMeans(n_clusters=3,random_state=2) #Number of cluster = 3
+model = model.fit(X_train) #Fitting the values to create a model.
+predictions = model.predict(X_train) #Predicting the cluster values (0,1,or 2)
+Instantiates KMeans with 3 clusters and random_state=2 for reproducibility.
+.fit(X_train) computes cluster centers and assignments.
+.predict(X_train) returns cluster labels for every sample (integers 0,1,2).
+unique,counts = np.unique(predictions,return_counts=True)
+counts = counts.reshape(1,3)
+counts_df = pd.DataFrame(counts,columns=['Cluster1','Cluster2','Cluster3'])
+counts_df.head()
+np.unique(..., return_counts=True) returns unique labels and counts per cluster (how many samples in each cluster).
+counts.reshape(1,3) reshapes counts to a single row for convenient DataFrame creation (assumes 3 clusters).
+pd.DataFrame(...) creates a small DataFrame showing counts per cluster.
+counts_df.head() shows that row.
+________________________________________
+Visualize clusters using PCA (2D projection)
+pca = PCA(n_components=2) #Converting all the features into 2 columns to make it easy to visualize using Principal COmponent Analysis.
+reduced_X = pd.DataFrame(pca.fit_transform(X_train),columns=['PCA1','PCA2']) #Creating a DataFrame.
+reduced_X.head()
+PCA(n_components=2) creates a PCA model to reduce features to 2 principal components (linear combination of original features capturing most variance).
+pca.fit_transform(X_train) fits PCA and returns transformed 2D coordinates for each sample.
+Wraps results into a DataFrame reduced_X with columns PCA1 and PCA2.
+#Plotting the normal Scatter Plot
+plt.figure(figsize=(14,10))
+plt.scatter(reduced_X['PCA1'],reduced_X['PCA2'])
+Plots a scatter of all samples in the 2D PCA space (no color yet) to see overall distribution.
+model.cluster_centers_ #Finding the centriods. (3 Centriods in total. Each Array contains a centroids for particular feature )
+reduced_centers = pca.transform(model.cluster_centers_) #Transforming the centroids into 3 in x and y coordinates
+reduced_centers
+model.cluster_centers_ returns cluster centers in the original feature space (dimension = number of original features).
+pca.transform(model.cluster_centers_) projects those centers into the PCA 2D space so they can be plotted on the same axes as reduced_X.
+reduced_centers is an array with shape (3,2) — the x,y coordinates of the 3 centroids in PCA space.
+plt.figure(figsize=(14,10))
+plt.scatter(reduced_X['PCA1'],reduced_X['PCA2'])
+plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300) #Plotting the centriods
+First line opens new figure.
+Plots data points.
+Overplots cluster centroids as large black X markers (s=300 increases marker size). This visually shows where KMeans placed centers relative to data.
+reduced_X['Clusters'] = predictions #Adding the Clusters to the reduced dataframe.
+reduced_X.head()
+Adds a new column Clusters to reduced_X containing cluster labels for each sample (from predictions).
+Useful to color points by cluster in subsequent plotting.
+
+Plot each cluster in different color and show centroids
+plt.figure(figsize=(14,10))
+#                     taking the cluster number and first column           taking the same cluster number and second column      Assigning the color
+plt.scatter(reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA2'],color='slateblue')
+plt.scatter(reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA2'],color='springgreen')
+plt.scatter(reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA2'],color='indigo')
+Creates a new figure and plots each cluster separately with a chosen color:
+Filters rows where Clusters == 0 and plots their PCA1 vs PCA2 values.
+Repeats for Clusters == 1 and Clusters == 2.
+.loc[:, 'PCA1'] picks the PCA1 column values for the filtered rows.
+This coloring makes cluster separation visually clear.
+plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300)   # Plotting centroids
+________________________________________
+QUESTIONS
+What is clustering?
+ Clustering is an unsupervised machine learning technique that groups similar data points into clusters based on distance or similarity.
+What is K-Means clustering?K-Means partitions the data into K clusters where each point belongs to the cluster with the nearest mean (centroid).
+Is K-Means supervised or unsupervised?
+It is unsupervised learning, because there are no predefined labels.
+What is the objective of K-Means?
+ To minimize the within-cluster sum of squares (inertia) — the distance between data points and their assigned cluster centroids.
+What is the Elbow Method? A graphical method to find the optimal number of clusters (k) by plotting inertia vs k and identifying where the curve bends like an “elbow”.
+Why does inertia decrease when k increases?
+ Because more clusters mean smaller groups, so data points are closer to their centroids — but too many clusters cause overfitting.
+Why did you choose K=3?
+ From the Elbow plot, the curve shows a clear bend at k=3, meaning 3 clusters balance compactness and simplicity.
+What is a centroid?
+ The mean point (center) of all data points within a cluster.
+What is PCA and why is it used here?
+ Principal Component Analysis reduces high-dimensional data to 2D for visualization while retaining maximum variance.
+What is the difference between PCA and K-Means?
+ PCA is a dimensionality reduction technique, K-Means is a clustering algorithm. PCA helps visualize clusters formed by K-Means.
+Why did you drop some columns at the beginning?
+ Because they were text-based (e.g., address, phone) or had too many nulls — not useful for numerical clustering.
+Why did you use pd.get_dummies()?To convert categorical columns (PRODUCTLINE, DEALSIZE) into numeric format required for clustering.
+Why did you drop COUNTRY?
+ Too many unique countries would add unnecessary high-dimensional noise and not help cluster meaningfully.
+What does pd.Categorical(...).codes do?
+ Converts text categories into numeric codes (label encoding).
+Why did you drop ORDERDATE?
+ Because time-based trends were already captured in other columns like MONTH, and dates can’t be directly used in clustering.
+What does KMeans.inertia_ represent?
+ It’s the within-cluster sum of squared distances — a measure of compactness of clusters.
+What is the purpose of plt.plot(K, distortions, 'bx-')?
+To visualize inertia vs number of clusters (Elbow plot).
+What does random_state do in KMeans?
+Ensures reproducibility — same results each time you run the code.
+What does pca.fit_transform(X_train) do?
+Fits PCA on the dataset and transforms it into a 2D reduced version for plotting.
+Why did you plot centroids using plt.scatter(reduced_centers[:,0], reduced_centers[:,1], color='black', marker='x')?
+ To visualize the cluster centers (means) in the 2D PCA space.
+What does np.unique(predictions, return_counts=True) show?
+ The unique cluster labels and how many data points belong to each cluster.
+Why do we need to standardize data before clustering?
+ Because features with large values dominate distance calculations; scaling ensures equal weight to all features.
+(Note: your code didn’t use scaling — the examiner may point this out.)
+What happens if we don’t scale the data?
+Variables with large numeric ranges (like “sales” or “quantity”) dominate clustering results.
+Why did you use PCA for visualization instead of raw features?
+ The dataset has many dimensions — PCA reduces it to 2D so clusters can be visualized easily.
+What is the meaning of model.predict(X_train)?
+ It assigns each data point to the cluster whose centroid is nearest.
+What does the Elbow plot show in your output?
+ A clear elbow at k=3, suggesting 3 clusters are optimal.
+What do the 3 clusters represent in this sales dataset?
+ They could represent different customer groups or sales behavior patterns (e.g., high-, medium-, and low-value customers).
+What do black X’s in your final scatter plot represent?
+ Cluster centroids.
+What do different colors in your scatter plot indicate?
+Data points belonging to different clusters.
+How would you evaluate how good your clusters are?
+ Using metrics like silhouette score, Davies–Bouldin index, or visual separability in the PCA plot.
+What are the limitations of K-Means?
+Sensitive to outliers.
+Requires you to predefine k.
+Only works with numeric, continuous data.
+Assumes spherical cluster shapes.
+Difference between K-Means and Hierarchical Clustering?
+K-Means partitions data based on centroids, while hierarchical clustering builds a hierarchy (tree) of clusters.
+If your data had non-numeric features, what would you do?
+ Encode them using techniques like one-hot encoding or label encoding.
+What happens if you run K-Means multiple times with different initializations?
+May lead to different cluster results — use n_init or set a random_state for consistency.
+What does PCA component value tell you?
+ How much variance each principal component explains — the first component captures the most variance.
+What is inertia’s ideal value?
+ Lower is better, but there’s no absolute value — it’s relative and compared across k values.
+________________________________________
+
+No.	Question	Answer
+1	What is clustering?
+Clustering is an unsupervised learning technique used to group similar data points into clusters based on features.
+2	What is the difference between supervised and unsupervised learning?	
+Supervised learning uses labeled data; unsupervised learning uses unlabeled data to find patterns.
+3	What is the objective of K-Means clustering?	
+To divide data into K groups such that points in the same group are similar and different from other groups.
+4	What does “K” mean in K-Means?	“K” is the number of clusters we want to create.
+5	What is a centroid?	A centroid is the center point of a cluster — the mean of all data points in that cluster.
+6	What are the main steps in the K-Means algorithm?	
+1. Choose K clusters. 2. Assign points to nearest centroid. 3. Recalculate centroids. 4. Repeat until convergence.
+7	How does K-Means assign data points?	It assigns each data point to the nearest cluster based on Euclidean distance.
+8	What is the disadvantage of K-Means?	
+You must predefine K, and it can give poor results if data has outliers or non-spherical shapes.
+9	How do you decide the value of K?
+Using the Elbow Method — where WCSS stops decreasing sharply.
+10	What is the Elbow Method?	
+A method that plots WCSS vs K and finds the “elbow point” where the curve bends — that’s the optimal K.
+11	What does WCSS mean?	WCSS = Within Cluster Sum of Squares — it measures total variance within clusters.
+12	What are other clustering algorithms?
+Hierarchical Clustering, DBSCAN, Mean Shift, Agglomerative Clustering.
+13	What is Hierarchical Clustering?	It builds clusters step-by-step either by merging or splitting (tree structure).
+14	Why is K-Means called unsupervised?	Because it works on data without target labels.
+15	Give a real-life application of clustering.
+Customer segmentation, market analysis, image compression, and document classification.
+
+No.	Question	Answer
+16	Which Python libraries did you use?	Pandas, Numpy, Matplotlib, Seaborn, and Scikit-learn.
+17	Why did you use Pandas?	For data loading, cleaning, and manipulation.
+18	What is the use of Matplotlib and Seaborn?	For data visualization and plotting graphs.
+19	How did you load the dataset?	Using pd.read_csv('Mall_Customers.csv').
+20	What does df.head() show?	It displays the first five rows of the dataset.
+21	What does df.info() show?	Data types and non-null values of each column.
+22	What does df.describe() show?	Statistical summary of numerical columns (mean, std, min, max).
+23	What is sns.distplot() used for?	To visualize the distribution of data in a feature.
+24	What is KMeans() used for?	It creates a K-Means clustering model.
+25	What is fit_predict()?	It fits the model and assigns each point a cluster label in one step.
+26	What is the use of n_clusters parameter?	It defines how many clusters (K) we want.
+27	What is the Elbow Curve used for?	To decide the best K by checking where WCSS stops decreasing sharply.
+28	What value of K did you choose?	K = 5 (based on Elbow Method).
+29	What features were used for clustering?	Annual Income and Spending Score.
+30	How did you visualize 2D clusters?	Using plt.scatter() for each cluster and centroid.
+31	How did you visualize in 3D?	Using Axes3D from matplotlib for 3D scatter plot.
+32	What does each color in the plot represent?	Each color represents a different cluster group.
+33	What is the use of kmeans.cluster_centers_?	It gives the coordinates of all cluster centroids.
+34	What is the purpose of clustering in this dataset?	To group customers based on spending behavior and income.
+35	What is the output of kmeans.labels_?	An array showing the cluster number assigned to each record.
+
+No.	Question	Answer
+36	What does your clustering result show?
+Customers are divided into 5 groups based on income and spending habits.
+37	Which cluster has high income and high spending?	
+The cluster with high income and high spending score — potential premium customers.
+38	Which cluster represents low income and low spending?	
+The cluster with low annual income and low spending score — least active customers.
+39	How can businesses use these clusters?	For targeted marketing, discounts, and loyalty programs.
+40	What did your 3D plot represent?
+It shows how age, income, and spending score together define different customer types.
+41	How many customers are in each cluster?	The count can be found using df['Cluster'].value_counts().
+42	What is your final conclusion?	
+K-Means successfully grouped customers into 5 distinct clusters for better business insight.
+
+No.	Question	Answer
+43	What distance metric is used in K-Means?	Euclidean Distance.
+44	What happens if K is too small or too large?	
+Too small → oversimplified; too large → overfitting and meaningless clusters.
+45	Can K-Means handle categorical data?	No, it only works well with numerical data.
+46	What is the time complexity of K-Means?	O(n × k × i), where i = number of iterations.
+47	What is random initialization?	Random starting centroids — can affect final clusters.
+48	What is the K-Means++ method?	It chooses better initial centroids to improve accuracy and stability.
+49	Why is scaling important in clustering?	Because features with larger values dominate distance calculations.
+50	What kind of learning is K-Means?	It is unsupervised learning.
+________________________________________
+
