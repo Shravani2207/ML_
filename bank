@@ -1,0 +1,327 @@
+Given a bank customer, 
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt #Importing the libraries
+df = pd.read_csv("Churn_Modelling.csv")
+# Preprocessing.
+df.head()
+df.shape
+df.describe()
+df.isnull()
+df.isnull().sum()
+df.info()
+df.dtypes
+df.columns
+df = df.drop(['RowNumber', 'Surname', 'CustomerId'], axis= 1) #Dropping the unnecessary columns
+df.head()
+# Visualization
+def visualization(x, y, xlabel):
+plt.figure(figsize=(10,5))
+plt.hist([x, y], color=['red', 'green'], label = ['exit', 'not_exit'])
+plt.xlabel(xlabel,fontsize=20)
+plt.ylabel("No. of customers", fontsize=20)
+plt.legend()
+df_churn_exited = df[df['Exited']==1]['Tenure']
+df_churn_not_exited = df[df['Exited']==0]['Tenure']
+visualization(df_churn_exited, df_churn_not_exited, "Tenure")
+df_churn_exited2 = df[df['Exited']==1]['Age']
+df_churn_not_exited2 = df[df['Exited']==0]['Age']
+visualization(df_churn_exited2, df_churn_not_exited2, "Age")
+# Converting the Categorical Variables
+X = df[['CreditScore','Gender','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary']]
+states = pd.get_dummies(df['Geography'],drop_first = True)
+gender = pd.get_dummies(df['Gender'],drop_first = True)
+
+df = pd.concat([df,gender,states], axis = 1)
+# Splitting the training and testing Dataset
+df.head()
+X = df[['CreditScore','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary','Male','Germany','Spain']]
+y = df['Exited']
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size = 0.30)
+# Normalizing the values with mean as 0 and Standard Deviation as 1
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train  = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+X_train
+X_test
+# Building the Classifier Model using Keras
+import keras #Keras is the wrapper on the top of tenserflow
+#Can use Tenserflow as well but won't be able to understand the errors initially.
+from keras.models import Sequential #To create sequential neural network
+from keras.layers import Dense #To create hidden layers
+classifier = Sequential()
+#To add the layers
+#Dense helps to contruct the neurons
+#Input Dimension means we have 11 features
+# Units is to create the hidden layers
+#Uniform helps to distribute the weight uniformly
+classifier.add(Dense(activation = "relu",input_dim = 11,units = 6,kernel_initializer = "uniform"))
+classifier.add(Dense(activation = "relu",units = 6,kernel_initializer = "uniform"))   #Adding second hidden layers
+classifier.add(Dense(activation = "sigmoid",units = 1,kernel_initializer = "uniform")) #Final neuron will be having siigmoid function
+classifier.compile(optimizer="adam",loss = 'binary_crossentropy',metrics = ['accuracy']) 
+#To compile the Artificial Neural Network. Ussed Binary crossentropy as we just have only two output
+classifier.summary() #3 layers created. 6 neurons in 1st,6neurons in 2nd layer and 1 neuron in last
+classifier.fit(X_train,y_train,batch_size=10,epochs=50) #Fitting the ANN to training dataset
+y_pred =classifier.predict(X_test)
+y_pred = (y_pred > 0.5) #Predicting the result
+from sklearn.metrics import confusion_matrix,accuracy_score,classification_report
+cm = confusion_matrix(y_test,y_pred)
+cm
+accuracy = accuracy_score(y_test,y_pred)
+accuracy
+plt.figure(figsize = (10,7))
+sns.heatmap(cm,annot = True)
+plt.xlabel('Predicted')
+plt.ylabel('Truth')
+print(classification_report(y_test,y_pred))
+Importing Libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt  # Importing the libraries
+pandas → for handling data (reading CSV, creating DataFrames).
+numpy → for numerical operations.
+seaborn and matplotlib → for data visualization.
+. Reading Dataset
+df = pd.read_csv("Churn_Modelling.csv")
+Reads the dataset into a DataFrame named df.
+This dataset contains 10,000 customers with 14 features.
+Basic Data Exploration
+df.head()
+Shows the first 5 rows of the dataset.
+df.shape
+Displays dataset dimensions → (rows, columns).
+df.describe()
+Gives statistical summary (mean, std, min, max, etc.) for numeric columns.
+df.isnull()
+df.isnull().sum()
+Checks for missing/null values in the dataset.
+df.info()
+Displays data types, column count, and memory usage.
+df.dtypes
+df.columns
+Shows the data type of each column and list of column names.
+Removing Unnecessary Columns
+df = df.drop(['RowNumber', 'Surname', 'CustomerId'], axis=1)
+df.head()
+RowNumber → just an index
+Surname → not related to churn
+CustomerId → a unique ID, not useful for learning
+Data Visualization Function
+def visualization(x, y, xlabel):
+plt.figure(figsize=(10,5))
+plt.hist([x, y], color=['red', 'green'], label=['exit', 'not_exit'])
+plt.xlabel(xlabel, fontsize=20)
+plt.ylabel("No. of customers", fontsize=20)
+plt.legend()
+A custom function to plot histograms comparing exited (left) vs not exited (stayed) customers.
+Visualization Examples
+df_churn_exited = df[df['Exited']==1]['Tenure']
+df_churn_not_exited = df[df['Exited']==0]['Tenure']
+visualization(df_churn_exited, df_churn_not_exited, "Tenure")
+Compares Tenure between customers who left and those who stayed.
+df_churn_exited2 = df[df['Exited']==1]['Age']
+df_churn_not_exited2 = df[df['Exited']==0]['Age']
+visualization(df_churn_exited2, df_churn_not_exited2, "Age")
+Compares Age distribution of both groups.
+Converting Categorical Variables
+X = df[['CreditScore','Gender','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary']]
+states = pd.get_dummies(df['Geography'], drop_first=True)
+gender = pd.get_dummies(df['Gender'], drop_first=True)
+df = pd.concat([df, gender, states], axis=1)
+Converts categorical data (“Geography” and “Gender”) into numerical dummy variables using one-hot encoding.
+drop_first=True avoids dummy variable trap.
+pd.concat() adds these new encoded columns back to the main dataframe.
+Example new columns:
+Male (0 or 1)
+Germany, Spain (binary flags; “France” dropped)
+Selecting Features and Target
+X = df[['CreditScore','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary','Male','Germany','Spain']]
+y = df['Exited']
+X → features used for prediction (11 input variables).
+y → target/output column (whether customer exited or not).
+Splitting Train and Test Data
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30)
+Splits dataset into:
+70% training data
+30% testing data
+Ensures model is trained on one part and tested on unseen data.
+Feature Scaling (Normalization)
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+Scales features so that all have mean = 0 and standard deviation = 1.
+Prevents large-valued features from dominating the model.
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+keras is a deep learning library (built on TensorFlow).
+Sequential → used to build a linear stack of layers.
+Dense → used to add fully connected neural layers.
+Creating the Model
+classifier = Sequential()
+Initializes the neural network.
+Adding Layers
+classifier.add(Dense(activation="relu", input_dim=11, units=6, kernel_initializer="uniform"))
+Input layer with 11 neurons (input_dim) (for 11 features).
+Hidden layer with 6 neurons, using ReLU activation.
+kernel_initializer="uniform" initializes weights evenly.
+classifier.add(Dense(activation="relu", units=6, kernel_initializer="uniform"))
+Adds another hidden layer with 6 neurons.
+ReLU helps to introduce non-linearity.
+classifier.add(Dense(activation="sigmoid", units=1, kernel_initializer="uniform"))
+Output layer with 1 neuron.
+Sigmoid activation gives output between 0 and 1 → suitable for binary classification (exit or not exit).
+classifier.compile(optimizer="adam", loss='binary_crossentropy', metrics=['accuracy'])
+Optimizer: adam – improves weights efficiently.
+Loss: binary_crossentropy – used for binary output.
+Metric: accuracy – to evaluate model performance.
+classifier.summary()
+Shows structure of the model — number of layers, neurons, parameters, etc.
+________________________________________
+classifier.fit(X_train, y_train, batch_size=10, epochs=50)
+Trains the model for 50 epochs (full passes through data).
+batch_size=10 → weights are updated after every 10 samples.
+________________________________________
+y_pred = classifier.predict(X_test)
+y_pred = (y_pred > 0.5)
+Predicts probabilities for test data.
+Converts probabilities above 0.5 → True (1) → Exited, else False (0) → Not exited.
+________________________________________
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+Confusion Matrix: Compares actual vs predicted labels.
+Accuracy: Overall percentage of correct predictions.
+Classification Report: Includes precision, recall, F1-score.
+________________________________________
+plt.figure(figsize=(10,7))
+sns.heatmap(cm, annot=True)
+plt.xlabel('Predicted')
+plt.ylabel('Truth')
+Creates a heatmap for the confusion matrix to easily visualize correct and incorrect predictions.
+________________________________________
+print(classification_report(y_test, y_pred))
+Prints a detailed performance report including:
+Precision (correct positive predictions)
+Recall (ability to find all positives)
+F1-score (balance between precision & recall)
+Support (number of true samples for each class)
+________________________________________
+Step	Task	Purpose
+1	Import libraries	Tools for data & model
+2	Read dataset	Load customer data
+3	Explore data	Check missing values & info
+4	Drop unused columns	Remove unnecessary data
+5	Visualize	Understand distribution
+6	Encode categorical	Convert strings → numbers
+7	Split train/test	Separate learning vs testing data
+8	Scale features	Normalize data for ANN
+9	Build ANN	Create layers and structure
+10	Compile	Set optimizer & loss
+11	Train	Learn from data
+12	Predict	Get output on test set
+13	Evaluate	Measure accuracy & visualize results
+________________________________________
+
+What is the objective of this project?
+To build a neural network-based classifier that predicts whether a bank customer will leave (churn) or stay with the bank in the next 6 months.
+What dataset did you use?
+The dataset is from Kaggle’s Bank Customer Churn Modeling dataset.
+It contains 10,000 rows and 14 columns with features like CreditScore, Geography, Gender, Age, Balance, Tenure, and EstimatedSalary.
+What is Churn Prediction?
+Churn prediction is the process of identifying customers who are likely to stop using a company’s services.
+It helps banks take preventive actions to retain customers.
+What are the main steps followed in this project?
+Read and explore the dataset
+Handle missing values and drop unnecessary columns
+Encode categorical variables
+Split data into training and test sets
+Normalize the dataset
+Build an Artificial Neural Network (ANN) model
+Train the model
+Evaluate the model using accuracy and confusion matrix
+What is Data Preprocessing?
+Data preprocessing involves cleaning and preparing the data for training — removing null values, encoding categorical data, and normalizing numeric values.
+Why did you drop columns like RowNumber, CustomerId, and Surname?
+Because they do not contribute to predicting churn — they are identifiers, not useful features for classification.
+Why did you perform encoding for Gender and Geography?
+Because machine learning models can’t handle categorical text data.
+Encoding converts categories into numerical form using one-hot encoding.
+What is feature scaling or normalization?
+Feature scaling ensures all numerical features are on the same scale, improving the convergence of the model.
+We used StandardScaler() to make each feature have mean = 0 and standard deviation = 1.
+What is the train-test split ratio?
+We used 70% for training and 30% for testing using the train_test_split() function.
+What is Keras and why did you use it?
+Keras is a high-level deep learning API that runs on top of TensorFlow.
+It makes building and training neural networks easier.
+What is a Sequential Model?
+A sequential model allows you to build a neural network layer by layer, where each layer has exactly one input tensor and one output tensor.
+What is a Dense layer in Keras?
+A Dense layer is a fully connected neural layer where each neuron receives input from all neurons of the previous layer.
+How many layers did your neural network have?
+Input layer → 11 neurons (features)
+1st hidden layer → 6 neurons
+2nd hidden layer → 6 neurons
+Output layer → 1 neuron (since it’s binary classification)
+What activation functions did you use?
+Hidden layers: ReLU (Rectified Linear Unit)
+Output layer: Sigmoid (because the output is binary: 0 or 1)
+What is the role of the activation function?
+It introduces non-linearity into the model, allowing the neural network to learn complex relationships between features.
+What optimizer did you use and why?
+Adam optimizer — it combines the advantages of both AdaGrad and RMSProp and adapts the learning rate for each parameter automatically.
+What loss function did you use?
+Binary Crossentropy, since the output is binary (Exited or Not Exited).
+What does classifier.fit() do?
+It trains the neural network on the training data for a specified number of epochs and batch size.
+What are epochs and batch size?
+Epoch: One complete pass through the entire dataset during training.
+Batch size: Number of samples processed before updating the model weights.
+
+How many epochs and batch size did you use?
+We used epochs = 50 and batch size = 10.
+How do you evaluate the performance of the model?
+By using the Confusion Matrix, Accuracy Score, and Classification Report (precision, recall, f1-score).
+What accuracy did your model achieve?
+The accuracy was around 85% – 87%, depending on random initialization.
+What is the Confusion Matrix and what does it show?
+It’s a 2x2 matrix that shows:
+True Positives (TP): Correctly predicted churn
+True Negatives (TN): Correctly predicted not churn
+False Positives (FP): Incorrectly predicted churn
+False Negatives (FN): Missed churn cases
+What is the output of classifier.summary()?
+It displays the model architecture — layer names, number of neurons, activation functions, and total trainable parameters.
+What is the purpose of sigmoid in the output layer?
+It converts the final output into a probability between 0 and 1, which we interpret as:
+If probability > 0.5 → Customer will leave (Exited = 1)
+Else → Customer stays (Exited = 0)
+What is the difference between accuracy and loss?
+Accuracy: Measures how many predictions were correct.
+Loss: Measures how far the predictions are from actual values — used for model optimization.
+What is overfitting and how can it be prevented?
+Overfitting occurs when the model performs well on training data but poorly on test data.
+It can be prevented by using regularization, dropout layers, or early stopping.
+________________________________________
+What are the advantages of Neural Networks?
+Can model complex relationships
+Works well with large datasets
+Automatically extracts features
+High predictive power
+What are the disadvantages of Neural Networks?
+Requires large data and computational power
+Difficult to interpret (black-box model)
+Can overfit easily without proper tuning
+What conclusion did you draw from this project?
+The ANN model effectively predicts customer churn. The most influential factors are Age, Balance, Active Membership, and Geography.
+The trained model achieved a good accuracy (around 85%), showing that neural networks can be efficiently used for churn prediction.
+________________________________________
+
