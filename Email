@@ -112,7 +112,11 @@ random_state=42 fixes the random seed so the split is reproducible.
 Result: four variables — training features/labels and testing features/labels.
 
 from sklearn.neighbors import KNeighborsClassifier
+#This imports the K-Nearest Neighbors classifier from scikit-learn.
 knn = KNeighborsClassifier(n_neighbors=7)
+#n_neighbors=7: number of nearest points to consider.
+Small k → model becomes sensitive (may overfit).
+Large k → model becomes smoother (may underfit).
 Imports the K-Nearest Neighbors classifier.
 Creates an instance knn with n_neighbors=7, meaning the classifier will look at the 7 nearest neighbors to decide the class of a point.
 knn.fit(X_train, y_train)
@@ -120,7 +124,11 @@ Fits the KNN classifier on the training data. For KNN, .fit() stores the trainin
 y_pred = knn.predict(X_test)
 Uses the trained KNN to predict labels for the test features. y_pred is the array of predicted labels.
 print("Prediction", y_pred)
-Prints the predicted labels array to the console.
+#For each test sample in X_test:
+Finds the 7 nearest neighbors from X_train.
+Checks their corresponding labels from y_train.
+Takes the majority class among them.
+
 print("KNN accuracy = ", metrics.accuracy_score(y_test, y_pred))
 Computes and prints the classification accuracy of the KNN model on test data: fraction of correct predictions (correct / total).
 print("Confusion matrix", metrics.confusion_matrix(y_test, y_pred))
@@ -128,15 +136,27 @@ Computes and prints the confusion matrix for KNN: a 2×2 (for binary) or NxN (fo
 
 # cost C = 1
 model = SVC(C = 1)
-Creates a Support Vector Classifier with regularization parameter C = 1. C controls the trade-off between a smooth decision boundary and classifying training points correctly; larger C → less regularization (tries harder to classify training points correctly).
+#SVC = Support Vector Classifier (from sklearn.svm)
+C = 1 → regularization parameter
+#What C does:
+Controls the trade-off between margin width and classification error:
+High C → model tries harder to classify all training points correctly 
+Low C → model allows more misclassifications to get a wider margin 
 # fit
 model.fit(X_train, y_train)
 Trains the SVM model on the training data. This builds the support vectors and decision boundary.
 # predict
 y_pred = model.predict(X_test)
-Predicts labels for the test set with the trained SVM. Note: this reuses the variable name y_pred and overwrites the previous KNN predictions.
+#For each sample in X_test, the model predicts the class label (e.g., 0 or 1).
+Uses the learned hyperplane to classify points:
+Points on one side → Class 0
+Points on the other side → Class 1
+ y_pred now contains predicted labels for the test set.
+
 metrics.confusion_matrix(y_true=y_test, y_pred=y_pred)
-Computes the confusion matrix for the SVM predictions. In your code you did not print it—this line returns the matrix but won’t display unless printed or in an interactive cell where return values are shown.
+Computes the confusion matrix for the SVM predictions.
+In your code you did not print it—this line returns the matrix but won’t display unless printed or in an interactive cell where return values are shown.
+
 print("SVM accuracy = ", metrics.accuracy_score(y_test, y_pred))
 Computes and prints the classification accuracy of the SVM on the test set.
 --------------------------------------------------------------------------------------------------------------
