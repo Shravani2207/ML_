@@ -205,9 +205,13 @@ diabetes_data_copy[['Glucose','BloodPressure','SkinThickness','Insulin','BMI']] 
 copy(deep=True): makes an independent copy (so original diabetes_data remains unchanged).
 The .replace(0, np.nan) on those columns: in this dataset, 0 is an invalid placeholder for physiological measures (e.g., BloodPressure=0 is not realistic).
 Replace 0 with np.nan so they are treated as missing values for imputation.
+
 print(diabetes_data_copy.isnull().sum())
+
 p = diabetes_data.hist(figsize = (20,20))
+
 isnull().sum(): prints count of missing values per column — helps identify which columns were affected.
+
 diabetes_data.hist(figsize=(20,20)): draws histograms for all numeric columns of the original dataframe (shows distributions).
 
 Impute missing values
@@ -220,6 +224,7 @@ fillna(..., inplace=True): replaces NaNs in-place.
 For Glucose and BloodPressure you use the mean — reasonable when distribution is roughly symmetric.
 For SkinThickness, Insulin, and BMI you use the median — safer for skewed distributions or when outliers exist.
 Choice of mean vs median is a design decision; justify in viva: median for skewed features, mean for near-symmetric.
+
 p = diabetes_data_copy.hist(figsize = (20,20))
 Shows histograms after imputation to visually confirm distributions haven’t become strange.
 
@@ -255,12 +260,17 @@ diabetes_data.Outcome.value_counts(): prints counts of each class (e.g., how man
 Scatter matrix, pairplot and correlation heatmaps
 from pandas.plotting import scatter_matrix
 p=scatter_matrix(diabetes_data,figsize=(25, 25))
+
 p=sns.pairplot(diabetes_data_copy, hue = 'Outcome')
+
 scatter_matrix(...): produces a matrix of scatter plots for each pair of numeric features and histograms on the diagonal —
 good for spotting relationships.
-sns.pairplot(..., hue='Outcome'): Seaborn’s nicer version of pairwise scatterplots that colors points by Outcome.
+sns.pairplot(..., hue='Outcome'):
+Seaborn’s nicer version of pairwise scatterplots that colors points by Outcome.
+
 plt.figure(figsize=(12,10))
 p=sns.heatmap(diabetes_data.corr(), annot=True,cmap ='RdYlGn')
+
 plt.figure(figsize=(12,10))
 p=sns.heatmap(diabetes_data_copy.corr(), annot=True,cmap ='RdYlGn')
 diabetes_data.corr() / diabetes_data_copy.corr(): compute correlation matrices (original vs imputed).
@@ -274,7 +284,9 @@ sc_X = StandardScaler()
 X = pd.DataFrame(sc_X.fit_transform(diabetes_data_copy.drop(["Outcome"],axis = 1),),
 columns=['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin',
 'BMI', 'DiabetesPedigreeFunction', 'Age'])
+
 X.head()
+
 y = diabetes_data_copy.Outcome
 StandardScaler(): scales features to mean 0 and variance 1 — important for distance-based algorithms like KNN.
 fit_transform(...) computes scaling on the provided columns and transforms them.
@@ -284,6 +296,7 @@ y = ...Outcome: the target series (0 or 1).
 
 Train-test split
 from sklearn.model_selection import train_test_split
+
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=1/3,random_state=42, stratify=y)
 train_test_split(...) splits data:
 test_size=1/3 => 33% test, 67% train.
@@ -302,17 +315,21 @@ knn.fit(X_train,y_train)
 
 train_scores.append(knn.score(X_train,y_train))
 test_scores.append(knn.score(X_test,y_test))
+
 KNeighborsClassifier(i): constructs KNN with k=i neighbors.
 In the loop for k from 1 to 14:
 .fit(X_train, y_train) trains the classifier (for KNN there's no real "learned parameters", but it stores training set).
-.score(X_train, y_train) returns accuracy on training set; .score(X_test, y_test) returns test accuracy.
+.score(X_train, y_train) returns accuracy on training set;
+.score(X_test, y_test) returns test accuracy.
 train_scores and test_scores store accuracies for plotting and model selection.
+
 max_train_score = max(train_scores)
 train_scores_ind = [i for i, v in enumerate(train_scores) if v == max_train_score]
 print('Max train score {} % and k = {}'.format(max_train_score*100,list(map(lambda x: x+1, train_scores_ind))))
 Finds max training accuracy and the index(es) where it occurs.
 enumerate indices start at 0, so x+1 maps back to the actual k value.
 Prints best training accuracy and corresponding k(s).
+
 max_test_score = max(test_scores)
 test_scores_ind = [i for i, v in enumerate(test_scores) if v == max_test_score]
 print('Max test score {} % and k = {}'.format(max_test_score*100,list(map(lambda x: x+1, test_scores_ind))))
@@ -357,6 +374,7 @@ it reduces dimensions to 2, so the visual decision boundary may not represent th
 
 Add title and show plot
 plt.title('KNN with Diabetes Data')
+
 plt.show()
 Title for the decision region plot and show() to display it.
 
@@ -365,8 +383,10 @@ from sklearn.metrics import confusion_matrix
 y_pred = knn.predict(X_test)
 confusion_matrix(y_test,y_pred)
 pd.crosstab(y_test, y_pred, rownames=['True'], colnames=['Predicted'], margins=True)
+
 confusion_matrix(y_test, y_pred): array with counts [ [TN, FP], [FN, TP] ] — useful to compute precision, recall, etc.
 pd.crosstab(...): a nicer tabular display of actual vs predicted counts, with margins=True adding row/column totals.
+
 y_pred = knn.predict(X_test)
 from sklearn import metrics
 cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
@@ -382,7 +402,8 @@ Axis labels and title added for readability.
 
 QUESTIONS
 Q1. What dataset did you use?
-The Pima Indians Diabetes Dataset from Kaggle, which contains medical attributes (like Glucose, BMI, Age, etc.) and an Outcome column indicating whether the person has diabetes.
+The Pima Indians Diabetes Dataset from Kaggle, which contains medical attributes (like Glucose, BMI, Age, etc.) 
+and an Outcome column indicating whether the person has diabetes.
 Q2. Why did you replace 0 values with NaN?
 Because 0 is not a realistic measurement for columns like Glucose, BloodPressure, Insulin, BMI, etc.
 It actually means missing data, so we replaced 0 with NaN before imputing.
