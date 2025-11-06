@@ -1,5 +1,6 @@
 ASSIGNMENT NO 5
-# Implement K-Means clustering/ hierarchical clustering on sales_data_sample.csv dataset. Determine the number of clusters using the elbow method.
+# Implement K-Means clustering/ hierarchical clustering on sales_data_sample.csv dataset.
+Determine the number of clusters using the elbow method.
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -26,7 +27,8 @@ df.dtypes
 
 df_drop  = ['ADDRESSLINE1', 'ADDRESSLINE2', 'STATUS','POSTALCODE', 'CITY', 'TERRITORY', 'PHONE', 'STATE', 'CONTACTFIRSTNAME', 'CONTACTLASTNAME', 'CUSTOMERNAME', 'ORDERNUMBER']
 
-df = df.drop(df_drop, axis=1) #Dropping the categorical uneccessary columns along with columns having null values. Can't fill the null values are there are alot of null values.
+df = df.drop(df_drop, axis=1) #Dropping the categorical uneccessary columns along with columns having null values.
+Can't fill the null values are there are alot of null values.
 
 df.isnull().sum()
 
@@ -88,7 +90,8 @@ counts_df = pd.DataFrame(counts,columns=['Cluster1','Cluster2','Cluster3'])
 counts_df.head()
 
 ## Visualization
-pca = PCA(n_components=2) #Converting all the features into 2 columns to make it easy to visualize using Principal COmponent Analysis.
+pca = PCA(n_components=2)
+#Converting all the features into 2 columns to make it easy to visualize using Principal COmponent Analysis.
 
 reduced_X = pd.DataFrame(pca.fit_transform(X_train),columns=['PCA1','PCA2']) #Creating a DataFrame.
 
@@ -114,7 +117,9 @@ reduced_X.head()
 
 #Plotting the clusters
 plt.figure(figsize=(14,10))
-#                     taking the cluster number and first column           taking the same cluster number and second column      Assigning the color
+# taking the cluster number and first column           
+taking the same cluster number and second column      
+Assigning the color
 plt.scatter(reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA2'],color='slateblue')
 plt.scatter(reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA2'],color='springgreen')
 plt.scatter(reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA2'],color='indigo')
@@ -136,11 +141,14 @@ matplotlib.pyplot → base plotting functions.
 from sklearn.cluster import KMeans, k_means #For clustering
 from sklearn.decomposition import PCA #Linear Dimensionality reduction.
 KMeans is the K-means clustering estimator from scikit-learn.
-k_means is an older functional API — you typically only need KMeans. (Minor note: importing k_means is unnecessary and may be deprecated.)
+k_means is an older functional API — you typically only need KMeans. 
+(Minor note: importing k_means is unnecessary and may be deprecated.)
 PCA will be used later to reduce feature space to 2D for visualization.
+
 df = pd.read_csv("sales_data_sample.csv", sep=",", encoding='Latin-1') #Loading the dataset.
 Reads the CSV file sales_data_sample.csv into a DataFrame df.
 sep="," is CSV default; encoding='Latin-1' handles files with special characters not covered by UTF-8.
+
 ## Preprocessing
 df.head()
 df.shape
@@ -154,76 +162,125 @@ df.describe() shows numeric summary statistics (mean, std, min, quartiles, max).
 df.info() prints column names, non-null counts, and dtypes — handy to spot missing values and data types.
 df.isnull().sum() counts missing values per column.
 df.dtypes shows each column’s data type.
+
 df_drop  = ['ADDRESSLINE1', 'ADDRESSLINE2', 'STATUS','POSTALCODE', 'CITY', 'TERRITORY', 'PHONE', 'STATE', 'CONTACTFIRSTNAME', 'CONTACTLASTNAME', 'CUSTOMERNAME', 'ORDERNUMBER']
-df = df.drop(df_drop, axis=1) #Dropping the categorical uneccessary columns along with columns having null values. Can't fill the null values are there are alot of null values.
+df = df.drop(df_drop, axis=1) #Dropping the categorical uneccessary columns along with columns having null values.
+Can't fill the null values are there are alot of null values.
 df.isnull().sum()
 df.dtypes
 Creates a list df_drop of columns considered unnecessary for clustering (mostly identifiers, text addresses, phone numbers).
 df.drop(..., axis=1) removes those columns from the DataFrame.
 The comment explains the reasoning: too many nulls / categorical text that are not helpful for numeric clustering.
 After dropping, df.isnull().sum() and df.dtypes are checked again to see the remaining nulls and data types.
+
 # Checking the categorical columns.
 df['COUNTRY'].unique()
+#Returns a NumPy array of all unique values in the COUNTRY column.
 df['PRODUCTLINE'].unique()
+#Returns all unique product categories in the PRODUCTLINE column.
 df['DEALSIZE'].unique()
+#Returns all unique values in DEALSIZE column.
 Prints unique values for these columns to inspect categories and decide what to do (one-hot encode, drop, etc.).
-productline = pd.get_dummies(df['PRODUCTLINE']) #Converting the categorical columns.
+
+productline = pd.get_dummies(df['PRODUCTLINE']) 
+#pd.get_dummies() converts the categorical PRODUCTLINE column into multiple binary columns, one for each unique category.
+#Converting the categorical columns.
 Dealsize = pd.get_dummies(df['DEALSIZE'])
+#Same concept: convert DEALSIZE into separate binary columns.
+
 df = pd.concat([df,productline,Dealsize], axis = 1)
 pd.get_dummies(...) converts categorical columns into one-hot encoded indicator columns (binary columns per category).
 productline and Dealsize are DataFrames with those dummy columns.
 pd.concat([...], axis=1) appends the new dummy columns to df.
+
 df_drop  = ['COUNTRY','PRODUCTLINE','DEALSIZE'] #Dropping Country too as there are alot of countries.
 df = df.drop(df_drop, axis=1)
 Drops the original categorical columns now that their dummy columns exist.
 Also drops COUNTRY entirely, as noted — probably too many unique countries would produce many dummy columns or noise.
+
 df['PRODUCTCODE'] = pd.Categorical(df['PRODUCTCODE']).codes #Converting the datatype.
 Converts the PRODUCTCODE categorical column into integer category codes (0,1,2,...).
-This is a label encoding approach; it produces numeric values but does not preserve any real ordinal meaning. Acceptable for clustering only if codes are meaningful or when followed by scaling.
+This is a label encoding approach; it produces numeric values but does not preserve any real ordinal meaning.
+Acceptable for clustering only if codes are meaningful or when followed by scaling.
+
 df.drop('ORDERDATE', axis=1, inplace=True) #Dropping the Orderdate as Month is already included.
+
 df.dtypes #All the datatypes are converted into numeric
 Drops ORDERDATE because a derived Month column (or similar) already exists — avoiding redundant temporal info.
 Check dtypes to confirm all columns are numeric (required by KMeans).
 
 Elbow method to choose number of clusters
-distortions = [] # Within Cluster Sum of Squares from the centroid
+distortions = [] 
+#distortions will store the sum of squared distances of each point to its cluster centroid for each value of k.
+This metric is also called inertia in scikit-learn.
 K = range(1,10)
+#Testing k = 1 to 9 clusters to find the optimal number.
+
 for k in K:
 kmeanModel = KMeans(n_clusters=k)
+#Creates a K-Means model with k clusters.
 kmeanModel.fit(df)
-distortions.append(kmeanModel.inertia_)   #Appeding the intertia to the Distortions
+#Fits the model to your dataset df.
+K-Means iteratively finds cluster centroids that minimize distance to points.
+
+distortions.append(kmeanModel.inertia_)
+#This is the within-cluster sum of squares (WCSS):
+Inertia=i=1∑k x∈Ci∑ ∣∣x−μi∣∣2
+Where:
+Ci= cluster i
+μi= centroid of cluster i
+x = data point
+distortions.append(...)
+Saves the inertia value for this k.
+
 distortions will store inertia_ values (sum of squared distances of samples to closest cluster center), a measure of cluster compactness.
 K = range(1,10) sets the candidate k values (1..9).
 Loop:
 Instantiate KMeans(n_clusters=k) (default random_state not set — results will vary slightly each run).
 .fit(df) fits KMeans on the whole DataFrame (all numeric features).
 kmeanModel.inertia_ gives the within-cluster sum of squares for that k; appended to distortions.
+
 plt.figure(figsize=(16,8))
+#Creates a wide figure (16×8 inches) for better readability.
+Makes sure all points and labels are clearly visible.
+
 plt.plot(K, distortions, 'bx-')
+#K → list of cluster numbers [1,2,...,9]
+distortions → within-cluster sum of squares (WCSS) for each k
+'bx-' → formatting style:
+b = blue color
+x = marker type (cross)
+- = line connecting the points
+
 plt.xlabel('k')
 plt.ylabel('Distortion')
 plt.title('The Elbow Method showing the optimal k')
+#xlabel = "k" → number of clusters
+ylabel = "Distortion" → WCSS value
+title → descriptive plot title
+This helps you quickly identify the “elbow” point.
+
 plt.show()
-Plots distortions vs k.
-The elbow method: look for the k where reduction in inertia begins to taper off (the “elbow”). That point is a reasonable tradeoff between compactness and number of clusters.
-## As the number of k increases Inertia decreases.
-## Observations: A Elbow can be observed at 3 and after that the curve decreases gradually.
-Comment: inertia always decreases as k increases; the meaningful question is where the elbow occurs.
+#Renders the plot in your notebook or output window.
+
 
 Fit KMeans with chosen k
 X_train = df.values #Returns a numpy array.
 X_train.shape
 X_train is a NumPy array of the DataFrame values (shape: n_samples × n_features).
 X_train.shape would print the array shape in a cell.
+
 model = KMeans(n_clusters=3,random_state=2) #Number of cluster = 3
 model = model.fit(X_train) #Fitting the values to create a model.
 predictions = model.predict(X_train) #Predicting the cluster values (0,1,or 2)
 Instantiates KMeans with 3 clusters and random_state=2 for reproducibility.
 .fit(X_train) computes cluster centers and assignments.
 .predict(X_train) returns cluster labels for every sample (integers 0,1,2).
+
 unique,counts = np.unique(predictions,return_counts=True)
 counts = counts.reshape(1,3)
 counts_df = pd.DataFrame(counts,columns=['Cluster1','Cluster2','Cluster3'])
+
 counts_df.head()
 np.unique(..., return_counts=True) returns unique labels and counts per cluster (how many samples in each cluster).
 counts.reshape(1,3) reshapes counts to a single row for convenient DataFrame creation (assumes 3 clusters).
@@ -232,27 +289,37 @@ counts_df.head() shows that row.
 
 Visualize clusters using PCA (2D projection)
 pca = PCA(n_components=2) #Converting all the features into 2 columns to make it easy to visualize using Principal COmponent Analysis.
+
 reduced_X = pd.DataFrame(pca.fit_transform(X_train),columns=['PCA1','PCA2']) #Creating a DataFrame.
+
 reduced_X.head()
+
 PCA(n_components=2) creates a PCA model to reduce features to 2 principal components (linear combination of original features capturing most variance).
 pca.fit_transform(X_train) fits PCA and returns transformed 2D coordinates for each sample.
 Wraps results into a DataFrame reduced_X with columns PCA1 and PCA2.
+
 #Plotting the normal Scatter Plot
 plt.figure(figsize=(14,10))
 plt.scatter(reduced_X['PCA1'],reduced_X['PCA2'])
 Plots a scatter of all samples in the 2D PCA space (no color yet) to see overall distribution.
+
 model.cluster_centers_ #Finding the centriods. (3 Centriods in total. Each Array contains a centroids for particular feature )
+
 reduced_centers = pca.transform(model.cluster_centers_) #Transforming the centroids into 3 in x and y coordinates
+
 reduced_centers
 model.cluster_centers_ returns cluster centers in the original feature space (dimension = number of original features).
 pca.transform(model.cluster_centers_) projects those centers into the PCA 2D space so they can be plotted on the same axes as reduced_X.
 reduced_centers is an array with shape (3,2) — the x,y coordinates of the 3 centroids in PCA space.
+
 plt.figure(figsize=(14,10))
 plt.scatter(reduced_X['PCA1'],reduced_X['PCA2'])
 plt.scatter(reduced_centers[:,0],reduced_centers[:,1],color='black',marker='x',s=300) #Plotting the centriods
 First line opens new figure.
 Plots data points.
-Overplots cluster centroids as large black X markers (s=300 increases marker size). This visually shows where KMeans placed centers relative to data.
+Overplots cluster centroids as large black X markers (s=300 increases marker size).
+This visually shows where KMeans placed centers relative to data.
+
 reduced_X['Clusters'] = predictions #Adding the Clusters to the reduced dataframe.
 reduced_X.head()
 Adds a new column Clusters to reduced_X containing cluster labels for each sample (from predictions).
@@ -260,7 +327,9 @@ Useful to color points by cluster in subsequent plotting.
 
 Plot each cluster in different color and show centroids
 plt.figure(figsize=(14,10))
-#                     taking the cluster number and first column           taking the same cluster number and second column      Assigning the color
+# taking the cluster number and first column          
+taking the same cluster number and second column     
+Assigning the color
 plt.scatter(reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 0].loc[:,'PCA2'],color='slateblue')
 plt.scatter(reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 1].loc[:,'PCA2'],color='springgreen')
 plt.scatter(reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA1'],reduced_X[reduced_X['Clusters'] == 2].loc[:,'PCA2'],color='indigo')
