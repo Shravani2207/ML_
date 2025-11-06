@@ -90,9 +90,11 @@ classifier = Sequential()
 #Uniform helps to distribute the weight uniformly
 classifier.add(Dense(activation = "relu",input_dim = 11,units = 6,kernel_initializer = "uniform"))
 
-classifier.add(Dense(activation = "relu",units = 6,kernel_initializer = "uniform"))   #Adding second hidden layers
+classifier.add(Dense(activation = "relu",units = 6,kernel_initializer = "uniform")) 
+#Adding second hidden layers
 
-classifier.add(Dense(activation = "sigmoid",units = 1,kernel_initializer = "uniform")) #Final neuron will be having siigmoid function
+classifier.add(Dense(activation = "sigmoid",units = 1,kernel_initializer = "uniform")) 
+#Final neuron will be having siigmoid function
 
 classifier.compile(optimizer="adam",loss = 'binary_crossentropy',metrics = ['accuracy']) 
 
@@ -136,7 +138,7 @@ seaborn and matplotlib → for data visualization.
 df = pd.read_csv("Churn_Modelling.csv")
 Reads the dataset into a DataFrame named df.
 This dataset contains 10,000 customers with 14 features.
-Basic Data Exploration
+
 df.head()
 Shows the first 5 rows of the dataset.
 df.shape
@@ -157,30 +159,71 @@ df.head()
 RowNumber → just an index
 Surname → not related to churn
 CustomerId → a unique ID, not useful for learning
-Data Visualization Function
+
+#Data Visualization Function
 def visualization(x, y, xlabel):
+#x → data for the first group (e.g., customers who exited)
+y → data for the second group (e.g., customers who did not exit)
+xlabel → label for the x-axis (e.g., “Age”, “Salary”, etc.)
 plt.figure(figsize=(10,5))
+#Creates a figure that is 10 inches wide and 5 inches tall.
 plt.hist([x, y], color=['red', 'green'], label=['exit', 'not_exit'])
+#color=['red','green'] → red for x (exit), green for y (not_exit).
+label=['exit','not_exit'] → legend labels for the two groups.
+By default, the two histograms are overlaid for easy visual comparison.
+
 plt.xlabel(xlabel, fontsize=20)
+#Sets the x-axis label to whatever is passed in xlabel
+Font size = 20 for readability.
 plt.ylabel("No. of customers", fontsize=20)
+#Sets the y-axis label to number of customers.
+Font size = 20.
 plt.legend()
-A custom function to plot histograms comparing exited (left) vs not exited (stayed) customers.
-Visualization Examples
+#Adds a legend to the plot showing which color corresponds to exit and not_exit.
+
+#Visualization Examples
 df_churn_exited = df[df['Exited']==1]['Tenure']
+#df['Exited'] == 1 → filters rows where the Exited column is 1 (i.e., customer churned).
+['Tenure'] → selects only the Tenure column (how long the customer was with the company).
+Result → df_churn_exited is a Series of tenure values for customers who left.
+
 df_churn_not_exited = df[df['Exited']==0]['Tenure']
+#df['Exited'] == 0 → filters rows where the Exited column is 0 (i.e., customer stayed).
+['Tenure'] → selects only the Tenure column.
+Result → df_churn_not_exited is a Series of tenure values for customers who did not leave.
+
 visualization(df_churn_exited, df_churn_not_exited, "Tenure")
 Compares Tenure between customers who left and those who stayed.
+
 df_churn_exited2 = df[df['Exited']==1]['Age']
 df_churn_not_exited2 = df[df['Exited']==0]['Age']
+
 visualization(df_churn_exited2, df_churn_not_exited2, "Age")
 Compares Age distribution of both groups.
 Converting Categorical Variables
+
 X = df[['CreditScore','Gender','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary']]
+#Creates a new DataFrame X containing only the independent variables (features) that you want to use for prediction.
+Features include:
+CreditScore → numerical
+Gender → categorical (will need encoding)
+Age, Tenure, Balance, NumOfProducts, HasCrCard, IsActiveMember, EstimatedSalary → mostly numeric or binary
+X will be used as the input for your ML model.
+
 states = pd.get_dummies(df['Geography'], drop_first=True)
+#pd.get_dummies() converts a categorical column into binary columns (0 or 1) — this is called one-hot encoding.
+drop_first=True avoids the dummy variable trap (multicollinearity), so only n-1 columns are created.
+
 gender = pd.get_dummies(df['Gender'], drop_first=True)
+#Converts the Gender column into binary form.
+If Gender has values Male and Female:
+
+drop_first=True → only one column is created (e.g., Male = 1 if male, 0 if female)
+
 df = pd.concat([df, gender, states], axis=1)
 Converts categorical data (“Geography” and “Gender”) into numerical dummy variables using one-hot encoding.
 drop_first=True avoids dummy variable trap.
+
 pd.concat() adds these new encoded columns back to the main dataframe.
 Example new columns:
 Male (0 or 1)
@@ -198,36 +241,44 @@ Splits dataset into:
 30% testing data
 Ensures model is trained on one part and tested on unseen data.
 Feature Scaling (Normalization)
+
 from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 Scales features so that all have mean = 0 and standard deviation = 1.
 Prevents large-valued features from dominating the model.
+
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
 keras is a deep learning library (built on TensorFlow).
 Sequential → used to build a linear stack of layers.
 Dense → used to add fully connected neural layers.
-Creating the Model
+
+#Creating the Model
 classifier = Sequential()
 Initializes the neural network.
-Adding Layers
+
+#Adding Layers
 classifier.add(Dense(activation="relu", input_dim=11, units=6, kernel_initializer="uniform"))
 Input layer with 11 neurons (input_dim) (for 11 features).
 Hidden layer with 6 neurons, using ReLU activation.
 kernel_initializer="uniform" initializes weights evenly.
+
 classifier.add(Dense(activation="relu", units=6, kernel_initializer="uniform"))
 Adds another hidden layer with 6 neurons.
 ReLU helps to introduce non-linearity.
+
 classifier.add(Dense(activation="sigmoid", units=1, kernel_initializer="uniform"))
 Output layer with 1 neuron.
 Sigmoid activation gives output between 0 and 1 → suitable for binary classification (exit or not exit).
+
 classifier.compile(optimizer="adam", loss='binary_crossentropy', metrics=['accuracy'])
 Optimizer: adam – improves weights efficiently.
 Loss: binary_crossentropy – used for binary output.
 Metric: accuracy – to evaluate model performance.
+
 classifier.summary()
 Shows structure of the model — number of layers, neurons, parameters, etc.
 
@@ -297,7 +348,8 @@ Build an Artificial Neural Network (ANN) model
 Train the model
 Evaluate the model using accuracy and confusion matrix
 What is Data Preprocessing?
-Data preprocessing involves cleaning and preparing the data for training — removing null values, encoding categorical data, and normalizing numeric values.
+Data preprocessing involves cleaning and preparing the data for training — removing null values,
+encoding categorical data, and normalizing numeric values.
 Why did you drop columns like RowNumber, CustomerId, and Surname?
 Because they do not contribute to predicting churn — they are identifiers, not useful features for classification.
 Why did you perform encoding for Gender and Geography?
